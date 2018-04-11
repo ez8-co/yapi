@@ -1,10 +1,10 @@
 /*
-  wow64ext -- An enhanced library from rewolf-wow64ext.
+  wow64fusion -- An fusion library that reduce differences between x64, wow64 and x86 processes based on rewolf-wow64ext.
 
   Copyright (c) 2010-2018 <http://ez8.co> <orca.zhang@yahoo.com>
   This library is released under the MIT License.
 
-  Please see LICENSE file or visit https://github.com/ez8-co/wow64ext for details.
+  Please see LICENSE file or visit https://github.com/ez8-co/wow64fusion for details.
 */
 #pragma once
 
