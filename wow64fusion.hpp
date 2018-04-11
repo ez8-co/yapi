@@ -1,5 +1,5 @@
 /*
-  wow64fusion -- An fusion library that reduce differences between x64, wow64 and x86 processes based on rewolf-wow64ext.
+  wow64fusion -- A fusion library that reduce differences between x64, wow64 and x86 processes based on rewolf-wow64ext.
 
   Copyright (c) 2010-2018 <http://ez8.co> <orca.zhang@yahoo.com>
   This library is released under the MIT License.
