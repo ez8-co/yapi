@@ -65,6 +65,7 @@ namespace {
 		// omit unused fields
 	};
 
+	typedef _PEB_T<DWORD>   PEB32;
 	typedef _PEB_T<DWORD64> PEB64;
 
 	typedef struct _PROCESS_BASIC_INFORMATION64 {
@@ -87,6 +88,7 @@ namespace {
 		// omit unused fields
 	};
 
+	typedef _PEB_LDR_DATA_T<DWORD>   PEB_LDR_DATA32;
 	typedef _PEB_LDR_DATA_T<DWORD64> PEB_LDR_DATA64;
 
 	template <class T>
@@ -105,6 +107,7 @@ namespace {
 		// omit unused fields
 	};
 
+	typedef _LDR_DATA_TABLE_ENTRY_T<DWORD>   LDR_DATA_TABLE_ENTRY32;
 	typedef _LDR_DATA_TABLE_ENTRY_T<DWORD64> LDR_DATA_TABLE_ENTRY64;
 
 	size_t tcslen(const char* str) { return strlen(str); }
@@ -151,29 +154,40 @@ DWORD64 WINAPI GetModuleHandle64(HANDLE hProcess, const TCHAR* moduleName)
 	NTSTATUS status = NtWow64QueryInformationProcess64(hProcess, ProcessBasicInformation, &pbi, sizeof(pbi), NULL);
 	if (!NT_SUCCESS(status)) return 0;
 
+	// pbi.Reserved0 is not zero under 32 bit OS
+	BOOL is32bit = pbi.Reserved0 > 0;
+	DWORD64 pebAddr = is32bit ? pbi.Reserved0 : pbi.PebBaseAddress;
+
 	PEB64 peb;
-	status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)pbi.PebBaseAddress, &peb, sizeof(peb), NULL);
+	status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)pebAddr, &peb, is32bit ? sizeof(PEB32) : sizeof(peb), NULL);
 	if (!NT_SUCCESS(status)) return 0;
+
+	DWORD64 ldrAddr = is32bit ? ((PEB32*)&peb)->Ldr : peb.Ldr;
 
 	PEB_LDR_DATA64 ldr;
-	status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)peb.Ldr, (PVOID)&ldr, sizeof(ldr), NULL);
+	status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)ldrAddr, (PVOID)&ldr, is32bit ? sizeof(PEB_LDR_DATA32) : sizeof(ldr), NULL);
 	if (!NT_SUCCESS(status)) return 0;
 
-	DWORD64 LastEntry = peb.Ldr + offsetof(PEB_LDR_DATA64, InLoadOrderModuleList);
+	DWORD64 LastEntry = ldrAddr + (is32bit ? offsetof(PEB_LDR_DATA32, InLoadOrderModuleList) : offsetof(PEB_LDR_DATA64, InLoadOrderModuleList));
 
 	LDR_DATA_TABLE_ENTRY64 head;
 	head.InLoadOrderLinks.Flink = ldr.InLoadOrderModuleList.Flink;
+	DWORD64 Flink = 0;
 	do {
-		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)head.InLoadOrderLinks.Flink, (PVOID)&head, sizeof(LDR_DATA_TABLE_ENTRY64), NULL);
+		Flink = is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->InLoadOrderLinks.Flink : head.InLoadOrderLinks.Flink;
+
+		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)Flink, (PVOID)&head, is32bit ? sizeof(LDR_DATA_TABLE_ENTRY32) : sizeof(head), NULL);
 		if (!NT_SUCCESS(status)) continue;
 
-		std::wstring modName((size_t)head.BaseDllName.MaximumLength, 0);
-		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)head.BaseDllName.Buffer, (PVOID)&modName[0], head.BaseDllName.MaximumLength, NULL);
+		DWORD64 length = is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->BaseDllName.MaximumLength : head.BaseDllName.MaximumLength;
+		std::wstring modName((size_t)length, 0);
+		DWORD64 buffer = is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->BaseDllName.Buffer : head.BaseDllName.Buffer;
+		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)buffer, (PVOID)&modName[0], length, NULL);
 		if (!NT_SUCCESS(status)) continue;
 
 		if (!_tcsicmp(moduleName, _W2T(modName).c_str()))
-			return head.DllBase;
-	} while (head.InLoadOrderLinks.Flink != LastEntry);
+			return is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->DllBase : head.DllBase;
+	} while (Flink != LastEntry);
 	return 0;
 }
 
