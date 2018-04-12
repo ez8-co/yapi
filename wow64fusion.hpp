@@ -720,6 +720,27 @@ private:
 		return true;
 	}
 
+	DWORD64 Call(const std::vector<DWORD64>& param) {
+		RemoteWriter p(_hProcess, &param[0], sizeof(DWORD64) * (param.size()));
+		if (!p) return -1;
+		HANDLE hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);
+		if (!hThread) return -1;
+		if (WaitForSingleObject(hThread, _dwTimeout) != WAIT_OBJECT_0) {
+			CloseHandle(hThread);
+			return -1;
+		}
+		if (!_dw64Ret) {
+			DWORD ret = 0;
+			GetExitCodeThread(hThread, &ret);
+			CloseHandle(hThread);
+			return ret;
+		}
+		DWORD64 ret = 0;
+		CloseHandle(hThread);
+		ReadProcessMemory64(_hProcess, p, &ret, sizeof(DWORD64), NULL);
+		return ret;
+	}
+
 public:
 	RemoteProcessCaller(HANDLE hProcess, const char* funcName)
 		: _hProcess(hProcess), _sc(0), func(GetProcAddress64(hProcess, GetNtDll64(), funcName)), _dw64Ret(FALSE), _dwTimeout(INFINITE) {}
@@ -743,23 +764,7 @@ template<DECL_VOID_TEMPLATE_ARGS(n)>\
 		param[0] = _dw64Ret;\
 		param[1] = func;\
 		REPEAT(n, TO_DWORD64_ARRAY_DECL, TO_DWORD64_ARRAY_DECL)\
-		RemoteWriter p(_hProcess, &param[0], sizeof(DWORD64) * (n + 2));\
-		if (!p) return -1;\
-		HANDLE hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);\
-		if (!hThread) return -1;\
-		if(WaitForSingleObject(hThread, _dwTimeout) == WAIT_OBJECT_0) {\
-			if(!_dw64Ret) {\
-				DWORD ret = 0;\
-				GetExitCodeThread(hThread, &ret);\
-				CloseHandle(hThread);\
-				return ret;\
-			}\
-			CloseHandle(hThread);\
-			ReadProcessMemory64(_hProcess, p, &param[0], sizeof(DWORD64), NULL);\
-			return param[0];\
-		}\
-		CloseHandle(hThread);\
-		return -1;\
+		return Call(param);\
 	}
 	CALLERS( 1) CALLERS( 2) CALLERS( 3) CALLERS( 4) CALLERS( 5) CALLERS( 6) /*CALLERS( 7) CALLERS( 8) CALLERS( 9) CALLERS(10)
 	CALLERS(11) CALLERS(12) CALLERS(13) CALLERS(14) CALLERS(15) CALLERS(16) CALLERS(17) CALLERS(18) CALLERS(19) CALLERS(20)*/
