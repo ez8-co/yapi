@@ -20,6 +20,33 @@
 namespace detail {
 	static HMODULE hNtDll = LoadLibrary(_T("ntdll.dll"));
 	static HANDLE hCurProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
+
+	BOOL Is64BitOS()
+	{
+		SYSTEM_INFO systemInfo = { 0 };
+		GetNativeSystemInfo(&systemInfo);
+		return systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64
+			|| systemInfo.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64;
+	}
+	static const BOOL is64BitOS = Is64BitOS();
+
+	struct GCBase
+	{
+		virtual DWORD64 toDWORD64() = 0;
+		virtual void gc() = 0;
+	};
+	struct GCHelper
+	{
+		~GCHelper() {
+			for (size_t i = 0; i < _ptrs.size(); i++) {
+				_ptrs[i]->gc();
+				delete _ptrs[i];
+			}
+		}
+		DWORD64 add(GCBase* ptr) { _ptrs.push_back(ptr); return ptr->toDWORD64(); }
+	private:
+		std::vector<GCBase*> _ptrs;
+	};
 }
 
 typedef std::basic_string<TCHAR, std::char_traits<TCHAR>, std::allocator<TCHAR> > tstring;
@@ -36,6 +63,72 @@ typedef std::basic_string<TCHAR, std::char_traits<TCHAR>, std::allocator<TCHAR> 
 #else
 	#define _W2T(str) std::wstring(str)
 #endif
+
+#define REPEAT_0(macro) 
+#define REPEAT_1(macro) REPEAT_0(macro)
+#define REPEAT_2(macro) REPEAT_1(macro) macro(1)
+#define REPEAT_3(macro) REPEAT_2(macro) macro(2)
+#define REPEAT_4(macro) REPEAT_3(macro) macro(3)
+#define REPEAT_5(macro) REPEAT_4(macro) macro(4)
+#define REPEAT_6(macro) REPEAT_5(macro) macro(5)
+#define REPEAT_7(macro) REPEAT_6(macro) macro(6)
+#define REPEAT_8(macro) REPEAT_7(macro) macro(7)
+#define REPEAT_9(macro) REPEAT_8(macro) macro(8)
+#define REPEAT_10(macro) REPEAT_9(macro) macro(9)
+#define REPEAT_11(macro) REPEAT_10(macro) macro(10)
+#define REPEAT_12(macro) REPEAT_11(macro) macro(11)
+#define REPEAT_13(macro) REPEAT_12(macro) macro(12)
+#define REPEAT_14(macro) REPEAT_13(macro) macro(13)
+#define REPEAT_15(macro) REPEAT_14(macro) macro(14)
+#define REPEAT_16(macro) REPEAT_15(macro) macro(15)
+#define REPEAT_17(macro) REPEAT_16(macro) macro(16)
+#define REPEAT_18(macro) REPEAT_17(macro) macro(17)
+#define REPEAT_19(macro) REPEAT_18(macro) macro(18)
+#define REPEAT_20(macro) REPEAT_19(macro) macro(19)
+
+#define END_MACRO_0(macro) 
+#define END_MACRO_1(macro) macro(1)
+#define END_MACRO_2(macro) macro(2)
+#define END_MACRO_3(macro) macro(3)
+#define END_MACRO_4(macro) macro(4)
+#define END_MACRO_5(macro) macro(5)
+#define END_MACRO_6(macro) macro(6)
+#define END_MACRO_7(macro) macro(7)
+#define END_MACRO_8(macro) macro(8)
+#define END_MACRO_9(macro) macro(9)
+#define END_MACRO_10(macro) macro(10)
+#define END_MACRO_11(macro) macro(11)
+#define END_MACRO_12(macro) macro(12)
+#define END_MACRO_13(macro) macro(13)
+#define END_MACRO_14(macro) macro(14)
+#define END_MACRO_15(macro) macro(15)
+#define END_MACRO_16(macro) macro(16)
+#define END_MACRO_17(macro) macro(17)
+#define END_MACRO_18(macro) macro(18)
+#define END_MACRO_19(macro) macro(19)
+#define END_MACRO_20(macro) macro(20)
+
+#define REPEAT(n, macro, end_macro) REPEAT_##n (macro) END_MACRO_##n(end_macro)
+
+#define __ARG(n) P ## n
+#define __PARAM(n) p ## n
+#define __ARG_DECL(n) __ARG(n) __PARAM(n)
+#define __TO_DWORD64_DECL(n) ToDWORD64(__PARAM(n), &helper)
+
+#define TEMPLATE_ARG(n) typename __ARG(n)
+#define VOID_TEMPLATE_ARGS(n) typename __ARG(n),
+
+#define ARG_DECL(n) __ARG_DECL(n) ,
+#define END_ARG_DECL(n) __ARG_DECL(n)
+
+#define TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n) ,
+#define END_TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n)
+
+#define TO_DWORD64_ARRAY_DECL(n) param[n + 1] = ToDWORD64(__PARAM(n), _hProcess, &helper);
+
+#define DECL_VOID_TEMPLATE_ARGS(n) REPEAT(n, VOID_TEMPLATE_ARGS, TEMPLATE_ARG)
+#define DECL_PARAMS_LIST(n) REPEAT(n, ARG_DECL, END_ARG_DECL)
+#define DECL_TO_DWORD64_LIST(n) REPEAT(n, TO_DWORD64_DECL, END_TO_DWORD64_DECL)
 
 namespace {
 	template <class T>
@@ -267,138 +360,58 @@ DWORD64 WINAPI GetProcAddress64(HANDLE hProcess, DWORD64 hModule, const char* fu
 		return hNtdll64;
 	}
 
-	#define REPEAT_0(macro) 
-	#define REPEAT_1(macro) REPEAT_0(macro)
-	#define REPEAT_2(macro) REPEAT_1(macro) macro(1)
-	#define REPEAT_3(macro) REPEAT_2(macro) macro(2)
-	#define REPEAT_4(macro) REPEAT_3(macro) macro(3)
-	#define REPEAT_5(macro) REPEAT_4(macro) macro(4)
-	#define REPEAT_6(macro) REPEAT_5(macro) macro(5)
-	#define REPEAT_7(macro) REPEAT_6(macro) macro(6)
-	#define REPEAT_8(macro) REPEAT_7(macro) macro(7)
-	#define REPEAT_9(macro) REPEAT_8(macro) macro(8)
-	#define REPEAT_10(macro) REPEAT_9(macro) macro(9)
-	#define REPEAT_11(macro) REPEAT_10(macro) macro(10)
-	#define REPEAT_12(macro) REPEAT_11(macro) macro(11)
-	#define REPEAT_13(macro) REPEAT_12(macro) macro(12)
-	#define REPEAT_14(macro) REPEAT_13(macro) macro(13)
-	#define REPEAT_15(macro) REPEAT_14(macro) macro(14)
-	#define REPEAT_16(macro) REPEAT_15(macro) macro(15)
-	#define REPEAT_17(macro) REPEAT_16(macro) macro(16)
-	#define REPEAT_18(macro) REPEAT_17(macro) macro(17)
-	#define REPEAT_19(macro) REPEAT_18(macro) macro(18)
-	#define REPEAT_20(macro) REPEAT_19(macro) macro(19)
-
-	#define END_MACRO_0(macro) 
-	#define END_MACRO_1(macro) macro(1)
-	#define END_MACRO_2(macro) macro(2)
-	#define END_MACRO_3(macro) macro(3)
-	#define END_MACRO_4(macro) macro(4)
-	#define END_MACRO_5(macro) macro(5)
-	#define END_MACRO_6(macro) macro(6)
-	#define END_MACRO_7(macro) macro(7)
-	#define END_MACRO_8(macro) macro(8)
-	#define END_MACRO_9(macro) macro(9)
-	#define END_MACRO_10(macro) macro(10)
-	#define END_MACRO_11(macro) macro(11)
-	#define END_MACRO_12(macro) macro(12)
-	#define END_MACRO_13(macro) macro(13)
-	#define END_MACRO_14(macro) macro(14)
-	#define END_MACRO_15(macro) macro(15)
-	#define END_MACRO_16(macro) macro(16)
-	#define END_MACRO_17(macro) macro(17)
-	#define END_MACRO_18(macro) macro(18)
-	#define END_MACRO_19(macro) macro(19)
-	#define END_MACRO_20(macro) macro(20)
-
-	#define REPEAT(n, macro, end_macro) REPEAT_##n (macro) END_MACRO_##n(end_macro)
-
-	#define __ARG(n) P ## n
-	#define __PARAM(n) p ## n
-	#define __ARG_DECL(n) __ARG(n) __PARAM(n)
-	#define __TO_DWORD64_DECL(n) ToDWORD64(__PARAM(n), &helper)
-
-	#define TEMPLATE_ARG(n) typename __ARG(n)
-	#define VOID_TEMPLATE_ARGS(n) typename __ARG(n),
-
-	#define ARG_DECL(n) __ARG_DECL(n) ,
-	#define END_ARG_DECL(n) __ARG_DECL(n)
-
-	#define TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n) ,
-	#define END_TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n)
-
-	#define DECL_VOID_TEMPLATE_ARGS(n) REPEAT(n, VOID_TEMPLATE_ARGS, TEMPLATE_ARG)
-	#define DECL_PARAMS_LIST(n) REPEAT(n, ARG_DECL, END_ARG_DECL)
-	#define DECL_TO_DWORD64_LIST(n) REPEAT(n, TO_DWORD64_DECL, END_TO_DWORD64_DECL)
-
 	#define _(x) __asm __emit (x)
 	__declspec(naked) DWORD64 X64Call(DWORD64 func, int argC, ...)
 	{
 		_(0x55)_(0x8b)_(0xec)_(0x8b)_(0x4d)_(0x10)_(0x8d)_(0x55)_(0x14)_(0x83)_(0xec)_(0x40)_(0x53)_(0x56)_(0x57)_(0x85)
-			_(0xc9)_(0x7e)_(0x15)_(0x8b)_(0x45)_(0x14)_(0x8d)_(0x55)_(0x1c)_(0x49)_(0x89)_(0x45)_(0xf0)_(0x8b)_(0x45)_(0x18)
-			_(0x89)_(0x4d)_(0x10)_(0x89)_(0x45)_(0xf4)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)_(0x13)_(0x45)_(0xf0)
-			_(0x85)_(0xc9)_(0x7e)_(0x15)_(0x49)_(0x83)_(0xc2)_(0x08)_(0x89)_(0x4d)_(0x10)_(0x8b)_(0x42)_(0xf8)_(0x89)_(0x45)
-			_(0xe8)_(0x8b)_(0x42)_(0xfc)_(0x89)_(0x45)_(0xec)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)_(0x13)_(0x45)
-			_(0xe8)_(0x85)_(0xc9)_(0x7e)_(0x15)_(0x49)_(0x83)_(0xc2)_(0x08)_(0x89)_(0x4d)_(0x10)_(0x8b)_(0x42)_(0xf8)_(0x89)
-			_(0x45)_(0xe0)_(0x8b)_(0x42)_(0xfc)_(0x89)_(0x45)_(0xe4)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)_(0x13)
-			_(0x45)_(0xe0)_(0x85)_(0xc9)_(0x7e)_(0x15)_(0x49)_(0x83)_(0xc2)_(0x08)_(0x89)_(0x4d)_(0x10)_(0x8b)_(0x42)_(0xf8)
-			_(0x89)_(0x45)_(0xd8)_(0x8b)_(0x42)_(0xfc)_(0x89)_(0x45)_(0xdc)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)
-			_(0x13)_(0x45)_(0xd8)_(0x8b)_(0xc2)_(0xc7)_(0x45)_(0xfc)_(0x00)_(0x00)_(0x00)_(0x00)_(0x99)_(0x0f)_(0x57)_(0xc0)
-			_(0x89)_(0x45)_(0xc0)_(0x8b)_(0xc1)_(0x89)_(0x55)_(0xc4)_(0x99)_(0x66)_(0x0f)_(0x13)_(0x45)_(0xc8)_(0x89)_(0x45)
-			_(0xd0)_(0x89)_(0x55)_(0xd4)_(0xc7)_(0x45)_(0xf8)_(0x00)_(0x00)_(0x00)_(0x00)_(0x66)_(0x8c)_(0x65)_(0xf8)_(0xb8)
-			_(0x2b)_(0x00)_(0x00)_(0x00)_(0x66)_(0x8e)_(0xe0)_(0x89)_(0x65)_(0xfc)_(0x83)_(0xe4)_(0xf0)_(0x6a)_(0x33)_(0xe8)
-			_(0x00)_(0x00)_(0x00)_(0x00)_(0x83)_(0x04)_(0x24)_(0x05)_(0xcb)_(0x48)_(0x8b)_(0x4d)_(0xf0)_(0x48)_(0x8b)_(0x55)
-			_(0xe8)_(0xff)_(0x75)_(0xe0)_(0x49)_(0x58)_(0xff)_(0x75)_(0xd8)_(0x49)_(0x59)_(0x48)_(0x8b)_(0x45)_(0xd0)_(0xa8)
-			_(0x01)_(0x75)_(0x03)_(0x83)_(0xec)_(0x08)_(0x57)_(0x48)_(0x8b)_(0x7d)_(0xc0)_(0x48)_(0x85)_(0xc0)_(0x74)_(0x16)
-			_(0x48)_(0x8d)_(0x7c)_(0xc7)_(0xf8)_(0x48)_(0x85)_(0xc0)_(0x74)_(0x0c)_(0xff)_(0x37)_(0x48)_(0x83)_(0xef)_(0x08)
-			_(0x48)_(0x83)_(0xe8)_(0x01)_(0xeb)_(0xef)_(0x48)_(0x83)_(0xec)_(0x20)_(0xff)_(0x55)_(0x08)_(0x48)_(0x8b)_(0x4d)
-			_(0xd0)_(0x48)_(0x8d)_(0x64)_(0xcc)_(0x20)_(0x5f)_(0x48)_(0x89)_(0x45)_(0xc8)_(0xe8)_(0x00)_(0x00)_(0x00)_(0x00)
-			_(0xc7)_(0x44)_(0x24)_(0x04)_(0x23)_(0x00)_(0x00)_(0x00)_(0x83)_(0x04)_(0x24)_(0x0d)_(0xcb)_(0x66)_(0x8c)_(0xd8)
-			_(0x66)_(0x8e)_(0xd0)_(0x8b)_(0x65)_(0xfc)_(0x66)_(0x8b)_(0x45)_(0xf8)_(0x66)_(0x8e)_(0xe0)_(0x8b)_(0x45)_(0xc8)
-			_(0x8b)_(0x55)_(0xcc)_(0x5f)_(0x5e)_(0x5b)_(0x8b)_(0xe5)_(0x5d)_(0xc3)
+		_(0xc9)_(0x7e)_(0x15)_(0x8b)_(0x45)_(0x14)_(0x8d)_(0x55)_(0x1c)_(0x49)_(0x89)_(0x45)_(0xf0)_(0x8b)_(0x45)_(0x18)
+		_(0x89)_(0x4d)_(0x10)_(0x89)_(0x45)_(0xf4)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)_(0x13)_(0x45)_(0xf0)
+		_(0x85)_(0xc9)_(0x7e)_(0x15)_(0x49)_(0x83)_(0xc2)_(0x08)_(0x89)_(0x4d)_(0x10)_(0x8b)_(0x42)_(0xf8)_(0x89)_(0x45)
+		_(0xe8)_(0x8b)_(0x42)_(0xfc)_(0x89)_(0x45)_(0xec)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)_(0x13)_(0x45)
+		_(0xe8)_(0x85)_(0xc9)_(0x7e)_(0x15)_(0x49)_(0x83)_(0xc2)_(0x08)_(0x89)_(0x4d)_(0x10)_(0x8b)_(0x42)_(0xf8)_(0x89)
+		_(0x45)_(0xe0)_(0x8b)_(0x42)_(0xfc)_(0x89)_(0x45)_(0xe4)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)_(0x13)
+		_(0x45)_(0xe0)_(0x85)_(0xc9)_(0x7e)_(0x15)_(0x49)_(0x83)_(0xc2)_(0x08)_(0x89)_(0x4d)_(0x10)_(0x8b)_(0x42)_(0xf8)
+		_(0x89)_(0x45)_(0xd8)_(0x8b)_(0x42)_(0xfc)_(0x89)_(0x45)_(0xdc)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)
+		_(0x13)_(0x45)_(0xd8)_(0x8b)_(0xc2)_(0xc7)_(0x45)_(0xfc)_(0x00)_(0x00)_(0x00)_(0x00)_(0x99)_(0x0f)_(0x57)_(0xc0)
+		_(0x89)_(0x45)_(0xc0)_(0x8b)_(0xc1)_(0x89)_(0x55)_(0xc4)_(0x99)_(0x66)_(0x0f)_(0x13)_(0x45)_(0xc8)_(0x89)_(0x45)
+		_(0xd0)_(0x89)_(0x55)_(0xd4)_(0xc7)_(0x45)_(0xf8)_(0x00)_(0x00)_(0x00)_(0x00)_(0x66)_(0x8c)_(0x65)_(0xf8)_(0xb8)
+		_(0x2b)_(0x00)_(0x00)_(0x00)_(0x66)_(0x8e)_(0xe0)_(0x89)_(0x65)_(0xfc)_(0x83)_(0xe4)_(0xf0)_(0x6a)_(0x33)_(0xe8)
+		_(0x00)_(0x00)_(0x00)_(0x00)_(0x83)_(0x04)_(0x24)_(0x05)_(0xcb)_(0x48)_(0x8b)_(0x4d)_(0xf0)_(0x48)_(0x8b)_(0x55)
+		_(0xe8)_(0xff)_(0x75)_(0xe0)_(0x49)_(0x58)_(0xff)_(0x75)_(0xd8)_(0x49)_(0x59)_(0x48)_(0x8b)_(0x45)_(0xd0)_(0xa8)
+		_(0x01)_(0x75)_(0x03)_(0x83)_(0xec)_(0x08)_(0x57)_(0x48)_(0x8b)_(0x7d)_(0xc0)_(0x48)_(0x85)_(0xc0)_(0x74)_(0x16)
+		_(0x48)_(0x8d)_(0x7c)_(0xc7)_(0xf8)_(0x48)_(0x85)_(0xc0)_(0x74)_(0x0c)_(0xff)_(0x37)_(0x48)_(0x83)_(0xef)_(0x08)
+		_(0x48)_(0x83)_(0xe8)_(0x01)_(0xeb)_(0xef)_(0x48)_(0x83)_(0xec)_(0x20)_(0xff)_(0x55)_(0x08)_(0x48)_(0x8b)_(0x4d)
+		_(0xd0)_(0x48)_(0x8d)_(0x64)_(0xcc)_(0x20)_(0x5f)_(0x48)_(0x89)_(0x45)_(0xc8)_(0xe8)_(0x00)_(0x00)_(0x00)_(0x00)
+		_(0xc7)_(0x44)_(0x24)_(0x04)_(0x23)_(0x00)_(0x00)_(0x00)_(0x83)_(0x04)_(0x24)_(0x0d)_(0xcb)_(0x66)_(0x8c)_(0xd8)
+		_(0x66)_(0x8e)_(0xd0)_(0x8b)_(0x65)_(0xfc)_(0x66)_(0x8b)_(0x45)_(0xf8)_(0x66)_(0x8e)_(0xe0)_(0x8b)_(0x45)_(0xc8)
+		_(0x8b)_(0x55)_(0xcc)_(0x5f)_(0x5e)_(0x5b)_(0x8b)_(0xe5)_(0x5d)_(0xc3)
 	}
 	#undef _
 
 	class X64Caller
 	{
-		struct GCBase
-		{
-			virtual DWORD64 toDWORD64() = 0;
-			virtual void gc() = 0;
-		};
-		struct GCHelper
-		{
-			~GCHelper() {
-				for (size_t i = 0; i < _ptrs.size(); i++) {
-					_ptrs[i]->gc();
-					delete _ptrs[i];
-				}
-			}
-			DWORD64 add(GCBase* ptr) { _ptrs.push_back(ptr); return ptr->toDWORD64(); }
-			std::vector<GCBase*> _ptrs;
-		};
         template<typename char_t>
-        struct StringHelper : GCBase
+        struct StringHelper : detail::GCBase
         {
-            _UNICODE_STRING_T<DWORD64>* name;
-
             StringHelper(const char_t* v) : name(0) {
                 name = new _UNICODE_STRING_T<DWORD64>;
                 name->Buffer = (DWORD64)v;
                 name->Length = (WORD)tcslen(v) * sizeof(char_t);
                 name->MaximumLength = (name->Length + 1) * sizeof(char_t);
             }
-            virtual void gc() {delete name;}
+            virtual void gc() { delete name; }
             virtual DWORD64 toDWORD64() { return (DWORD64)name; }
+		private:
+            _UNICODE_STRING_T<DWORD64>* name;
         };
 		template<typename T>
-		DWORD64 ToDWORD64(T v, GCHelper*) {
+		DWORD64 ToDWORD64(T v, detail::GCHelper*) {
 			return DWORD64(v);
 		}
-		template<> DWORD64 ToDWORD64<const char*>(const char* v, GCHelper* helper) { return helper->add(new StringHelper<char>(v)); }
-		template<> DWORD64 ToDWORD64<const wchar_t*>(const wchar_t* v, GCHelper* helper) { return helper->add(new StringHelper<wchar_t>(v)); }
-		template<> DWORD64 ToDWORD64<char*>(char* v, GCHelper* helper) { return helper->add(new StringHelper<char>(v)); }
-		template<> DWORD64 ToDWORD64<wchar_t*>(wchar_t* v, GCHelper* helper) { return helper->add(new StringHelper<wchar_t>(v)); }
+		template<> DWORD64 ToDWORD64<const char*>(const char* v, detail::GCHelper* helper) { return helper->add(new StringHelper<char>(v)); }
+		template<> DWORD64 ToDWORD64<const wchar_t*>(const wchar_t* v, detail::GCHelper* helper) { return helper->add(new StringHelper<wchar_t>(v)); }
+		template<> DWORD64 ToDWORD64<char*>(char* v, detail::GCHelper* helper) { return helper->add(new StringHelper<char>(v)); }
+		template<> DWORD64 ToDWORD64<wchar_t*>(wchar_t* v, detail::GCHelper* helper) { return helper->add(new StringHelper<wchar_t>(v)); }
 
 	private:
 		DWORD64 func;
@@ -410,7 +423,7 @@ DWORD64 WINAPI GetProcAddress64(HANDLE hProcess, DWORD64 hModule, const char* fu
 		operator DWORD64() { return func; }
 
 		DWORD64 operator()() { return func && X64Call(func, 0); }
-	#define CALLERS(n) template<DECL_VOID_TEMPLATE_ARGS(n)> DWORD64 operator()(DECL_PARAMS_LIST(n)) { GCHelper helper; return func && X64Call(func, n, DECL_TO_DWORD64_LIST(n)); }
+	#define CALLERS(n) template<DECL_VOID_TEMPLATE_ARGS(n)> DWORD64 operator()(DECL_PARAMS_LIST(n)) { detail::GCHelper helper; return func && X64Call(func, n, DECL_TO_DWORD64_LIST(n)); }
 		CALLERS( 1) CALLERS( 2) CALLERS( 3) CALLERS( 4) CALLERS( 5) CALLERS( 6) CALLERS( 7) CALLERS( 8) CALLERS( 9) CALLERS(10)
 		CALLERS(11) CALLERS(12) CALLERS(13) CALLERS(14) CALLERS(15) CALLERS(16) CALLERS(17) CALLERS(18) CALLERS(19) CALLERS(20)
 	#undef CALLERS
@@ -555,11 +568,14 @@ class RemoteWriter
 {
 public:
 	template<typename T>
-	RemoteWriter(HANDLE hProcess, T content, SIZE_T dwSize, DWORD flProtect = PAGE_READWRITE) {
-		_hProcess = hProcess;
-		_dw64Address = VirtualAllocEx64(hProcess, NULL, dwSize, MEM_COMMIT | MEM_RESERVE, flProtect);
-		_dwSize = dwSize;
-		if (!_dw64Address) return;
+	RemoteWriter(HANDLE hProcess, T content, SIZE_T dwSize, DWORD flProtect = PAGE_READWRITE)
+		: _autoRelease(TRUE)
+		, _hProcess(hProcess)
+		, _dw64Address(0)
+		, _dwSize(dwSize)
+	{
+		if (!(_dw64Address = VirtualAllocEx64(hProcess, NULL, dwSize, MEM_COMMIT | MEM_RESERVE, flProtect)))
+			return;
 		SIZE_T written = 0;
 		if (!WriteProcessMemory64(hProcess, _dw64Address, (PVOID)content, dwSize, &written) || written != dwSize) {
 			VirtualFreeEx64(hProcess, _dw64Address, _dwSize, MEM_DECOMMIT);
@@ -567,8 +583,11 @@ public:
 		}
 	}
 	~RemoteWriter() {
-		if (_dw64Address)
+		if (_dw64Address && _autoRelease)
 			VirtualFreeEx64(_hProcess, _dw64Address, _dwSize, MEM_DECOMMIT);
+	}
+	void SetDontRelese() {
+		_autoRelease = FALSE;
 	}
 	operator DWORD64() {
 		return (DWORD64)_dw64Address;
@@ -581,6 +600,7 @@ public:
 #endif
 
 private:
+	BOOL _autoRelease;
 	HANDLE _hProcess;
 #ifdef _WIN64
 	LPVOID _dw64Address;
@@ -588,4 +608,160 @@ private:
 	DWORD64 _dw64Address;
 #endif
 	SIZE_T _dwSize;
+};
+
+std::string make_shell_code(int cnt)
+{
+	if (detail::is64BitOS) {
+		static const unsigned char kTmpl_x64[] = { 0x40, 0x53, 0x48, 0x83, 0xec, 0x20, 0x48, 0x8b, 0xd9, 0x48, 0x85, 0xc9, 0x74, 0x1d, 0x48, 0x83, 
+												   0x39, 0x00, 0x48, 0x8b, 0x41, 0x08, 0x74, 0x0b, 0xff, 0xd0, 0x48, 0x89, 0x03, 0x48, 0x83, 0xc4, 
+												   0x20, 0x5b, 0xc3, 0x48, 0x83, 0xc4, 0x20, 0x5b, 0x48, 0xff, 0xe0, 0x33, 0xc0, 0x48, 0x83, 0xc4, 
+												   0x20, 0x5b, 0xc3 };
+
+		std::string templ_x64((const char*)kTmpl_x64, sizeof(kTmpl_x64));
+		if (!cnt) return templ_x64;
+
+		templ_x64[13] += (cnt <= 4) ? cnt * 4 : (cnt - 4) * 9 + 16;
+		if(cnt >= 1)
+			templ_x64[16] = 0x3b;
+
+		if (cnt < 3) {
+			if (cnt >= 1) {
+				templ_x64.insert(22, "\x48\x8b\x49\x10", 4);
+			}
+			if (cnt >= 2) {
+				templ_x64.insert(22, "\x48\x8b\x51\x18", 4);
+			}
+		}
+		else {
+			templ_x64[20] = 0x49;
+			templ_x64[21] = 0x10;
+			templ_x64.insert(22, "\x48\x8B\x53\x18", 4);
+			templ_x64.insert(22, "\x4c\x8b\x43\x20", 4);
+			templ_x64.insert(22, "\x48\x8b\x43\x08", 4);
+			if (cnt >= 4) {
+				templ_x64.insert(26, "\x4c\x8b\x4b\x28", 4);
+			}
+			if (cnt >= 5) {
+				templ_x64.insert(18, "\x4c\x8B\x53\x30", 4);
+				templ_x64.insert(42, "\x4c\x89\x54\x24\x20", 5);
+			}
+			if (cnt >= 6) {
+				templ_x64[21] = 0x38;
+				templ_x64.insert(22, "\x4c\x8b\x5b\x30", 4);
+				templ_x64[50] = 0x28;
+				templ_x64.insert(51, "\x4c\x89\x5c\x24\x20", 5);
+			}
+			// TODO
+		}
+		return templ_x64;
+	}
+	static const unsigned char kTmpl_x86[] = { 0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8, 0x51, 0x56, 0x8b, 0xf1, 0x85, 0xf6, 0x74, 0xcc, 0x8b, 0x46,
+											   0x08, 0xff, 0xd0, 0x99, 0x83, 0xc4, 0xcc, 0x89, 0x06, 0x89, 0x56, 0x04, 0x33, 0xc0, 0x5e, 0xc3 };
+	std::string templ_x86((const char*)kTmpl_x86, sizeof(kTmpl_x86));
+	// je
+	templ_x86[13] = cnt ? (0x0e + 6 * cnt) : 0x0b;
+	// esp balance
+	templ_x86[22] = (cnt << 3);
+	// push        dword ptr [esi+xxh]
+	if (cnt) {
+		templ_x86.insert(14, "\xff\x76\x0c", 3);
+		templ_x86[16] += (cnt << 3);
+		templ_x86.insert(20, "\xff\x76\x10", 3);
+	}
+	for (int i = 0; i < (cnt - 1) * 2; ++i) {
+		templ_x86.insert(20, "\xff\x76\x14", 3);
+		templ_x86[22] += (i << 2);
+	}
+	return templ_x86;
+}
+
+template<int argCnt>
+const std::string& shell_code() {
+	static std::string kCode = make_shell_code(argCnt);
+	return kCode;
+}
+
+class RemoteProcessCaller
+{
+	template<typename T>
+	DWORD64 ToDWORD64(T v, HANDLE hProcess, detail::GCHelper*) {
+		return DWORD64(v);
+	}
+    template<typename char_t>
+    struct StringHelper : detail::GCBase
+    {
+        StringHelper(HANDLE hProcess, const char_t* v) : name(0) {
+			name = new RemoteWriter(hProcess, v, (tcslen(v) + 1) * sizeof(char_t));
+        }
+        virtual void gc() { delete name; }
+        virtual DWORD64 toDWORD64() { return (DWORD64)*name; }
+	private:
+        RemoteWriter* name;
+    };
+	template<> DWORD64 ToDWORD64<const char*>(const char* v, HANDLE hProcess, detail::GCHelper* helper) { return helper->add(new StringHelper<char>(hProcess, v)); }
+	template<> DWORD64 ToDWORD64<const wchar_t*>(const wchar_t* v, HANDLE hProcess, detail::GCHelper* helper) { return helper->add(new StringHelper<wchar_t>(hProcess, v)); }
+	template<> DWORD64 ToDWORD64<char*>(char* v, HANDLE hProcess, detail::GCHelper* helper) { return helper->add(new StringHelper<char>(hProcess, v)); }
+	template<> DWORD64 ToDWORD64<wchar_t*>(wchar_t* v, HANDLE hProcess, detail::GCHelper* helper) { return helper->add(new StringHelper<wchar_t>(hProcess, v)); }
+
+private:
+	HANDLE _hProcess;
+	RemoteWriter* _sc;
+	DWORD64 func;
+	BOOL _dw64Ret;
+	DWORD _dwTimeout;
+
+	template<int argCnt>
+	bool InitShellCoder(RemoteWriter*& sc) {
+		if(sc) return false;
+		const std::string& shellcode = shell_code<argCnt>();
+		sc = new RemoteWriter(_hProcess, shellcode.data(), shellcode.size() + 1, PAGE_EXECUTE_READWRITE);
+		sc->SetDontRelese();
+		return true;
+	}
+
+public:
+	RemoteProcessCaller(HANDLE hProcess, const char* funcName)
+		: _hProcess(hProcess), _sc(0), func(GetProcAddress64(hProcess, GetNtDll64(), funcName)), _dw64Ret(FALSE), _dwTimeout(INFINITE) {}
+	RemoteProcessCaller(HANDLE hProcess, DWORD64 hNtdll, const char* funcName)
+		: _hProcess(hProcess), _sc(0), func(GetProcAddress64(hProcess, hNtdll, funcName)), _dw64Ret(FALSE), _dwTimeout(INFINITE) {}
+
+	~RemoteProcessCaller() { if (_sc) delete _sc; }
+
+	operator DWORD64() { return func; }
+
+	void EnableDWORD64Return() { _dw64Ret = TRUE; }
+	void SetTimeout(DWORD dwTimeout) { _dwTimeout = dwTimeout; }
+
+#define CALLERS(n) \
+template<DECL_VOID_TEMPLATE_ARGS(n)>\
+	DWORD64 operator()(DECL_PARAMS_LIST(n)) {\
+		static bool b = InitShellCoder<n>(_sc);\
+		if(!func || !_sc || !*_sc) return -1;\
+		detail::GCHelper helper;\
+		std::vector<DWORD64> param(n + 2, 0);\
+		param[0] = _dw64Ret;\
+		param[1] = func;\
+		REPEAT(n, TO_DWORD64_ARRAY_DECL, TO_DWORD64_ARRAY_DECL)\
+		RemoteWriter p(_hProcess, &param[0], sizeof(DWORD64) * (n + 2));\
+		if (!p) return -1;\
+		HANDLE hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);\
+		if (!hThread) return -1;\
+		if(WaitForSingleObject(hThread, _dwTimeout) == WAIT_OBJECT_0) {\
+			if(!_dw64Ret) {\
+				DWORD ret = 0;\
+				GetExitCodeThread(hThread, &ret);\
+				CloseHandle(hThread);\
+				return ret;\
+			}\
+			CloseHandle(hThread);\
+			ReadProcessMemory64(_hProcess, p, &param[0], sizeof(DWORD64), NULL);\
+			return param[0];\
+		}\
+		CloseHandle(hThread);\
+		return -1;\
+	}
+	CALLERS( 1) CALLERS( 2) CALLERS( 3) CALLERS( 4) CALLERS( 5) CALLERS( 6) /*CALLERS( 7) CALLERS( 8) CALLERS( 9) CALLERS(10)
+	CALLERS(11) CALLERS(12) CALLERS(13) CALLERS(14) CALLERS(15) CALLERS(16) CALLERS(17) CALLERS(18) CALLERS(19) CALLERS(20)*/
+#undef CALLERS
 };
