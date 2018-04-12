@@ -746,6 +746,8 @@ public:
 		: _hProcess(hProcess), _sc(0), func(GetProcAddress64(hProcess, GetNtDll64(), funcName)), _dw64Ret(FALSE), _dwTimeout(INFINITE) {}
 	RemoteProcessCaller(HANDLE hProcess, DWORD64 hNtdll, const char* funcName)
 		: _hProcess(hProcess), _sc(0), func(GetProcAddress64(hProcess, hNtdll, funcName)), _dw64Ret(FALSE), _dwTimeout(INFINITE) {}
+	RemoteProcessCaller(HANDLE hProcess, const TCHAR* modName, const char* funcName)
+		: _hProcess(hProcess), _sc(0), func(GetProcAddress64(hProcess, GetModuleHandle64(hProcess, modName), funcName)), _dw64Ret(FALSE), _dwTimeout(INFINITE) {}
 
 	~RemoteProcessCaller() { if (_sc) delete _sc; }
 
