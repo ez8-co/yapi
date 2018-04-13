@@ -1,15 +1,17 @@
 /*
-	wow64fusion demo
+	yapi demo
 
 	Copyright (c) 2010-2018 <http://ez8.co> <orca.zhang@yahoo.com>
 	This library is released under the MIT License.
 
-	Please see LICENSE file or visit https://github.com/ez8-co/wow64fusion for details.
+	Please see LICENSE file or visit https://github.com/ez8-co/yapi for details.
 */
 #include "stdafx.h"
-#include "../wow64fusion.hpp"
+#include "../yapi.hpp"
 
 #include <TlHelp32.h>
+
+using namespace yapi;
 
 DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName);
 
@@ -46,9 +48,9 @@ int main()
 
 #if 0
 	// bellow shows how to use like windows API
-	X64Caller RtlCreateUserThread("RtlCreateUserThread");
+	X64Call RtlCreateUserThread("RtlCreateUserThread");
 	if (!RtlCreateUserThread) return 0;
-	X64Caller LdrUnloadDll("LdrUnloadDll");
+	X64Call LdrUnloadDll("LdrUnloadDll");
 	if (!LdrUnloadDll) return 0;
 
 	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -85,11 +87,14 @@ int main()
 
 #if 1
 
-			RemoteProcessCaller MessageBoxA(hProcess, _T("user32.dll"), "MessageBoxA");
-			MessageBoxA(NULL, "Hello World!", "MessageBoxA @ ez8.co", MB_OK);
+			YAPICall MessageBoxA(hProcess, _T("user32.dll"), "MessageBoxA");
+			MessageBoxA(NULL, "MessageBoxA : Hello World!", "From ez8.co", MB_OK);
 
-			RemoteProcessCaller MessageBoxW(hProcess, _T("user32.dll"), "MessageBoxW");
-			MessageBoxW(NULL, L"Hello World!", L"MessageBoxW @ ez8.co", MB_OK);
+			YAPI(hProcess, _T("user32.dll"), MessageBoxW)
+				(NULL, L"MessageBoxW: Hello World!", L"From ez8.co", MB_OK);
+
+			YAPICall GetCurrentProcessId(hProcess, _T("kernel32.dll"), "GetCurrentProcessId");
+			DWORD pid = GetCurrentProcessId();
 
 #else
 
@@ -101,9 +106,8 @@ int main()
 			DWORD64 user32Dll2 = GetModuleHandleDw64(hProcess, _T("user32.dll"));
 
 			// method 2:
-			RemoteProcessCaller GetModuleHandle(hProcess, _T("kernel32.dll"), sizeof(TCHAR) == sizeof(char) ? "GetModuleHandleA" : "GetModuleHandleW");
-			GetModuleHandle.EnableDWORD64Return();
-			DWORD64 user32Dll1 = GetModuleHandle(_T("user32.dll"));
+			YAPICall GetModuleHandle(hProcess, _T("kernel32.dll"), sizeof(TCHAR) == sizeof(char) ? "GetModuleHandleA" : "GetModuleHandleW");
+			DWORD64 user32Dll1 = GetModuleHandle.Dw64()(_T("user32.dll"));
 
 			/*
 				DWORD WINAPI MessageBoxDelegator(MessageBoxParam* param)

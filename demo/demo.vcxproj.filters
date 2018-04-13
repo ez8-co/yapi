@@ -21,7 +21,7 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\wow64fusion.hpp">
+    <ClInclude Include="..\yapi.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
