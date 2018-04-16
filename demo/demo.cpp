@@ -15,34 +15,45 @@ using namespace yapi;
 
 DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName);
 
-#if 0
-typedef DWORD64(WINAPI* FUNC)(DWORD64, DWORD64, DWORD64, DWORD64, DWORD64, DWORD64, DWORD64, DWORD64, DWORD64, DWORD64);
+#if 1
+typedef DWORD (WINAPI* FUNC)(DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD);
 struct Param1 {
-	DWORD64 ret;
 	FUNC func;
-	DWORD64 arg1;
-	DWORD64 arg2;
-	DWORD64 arg3;
-	DWORD64 arg4;
-	DWORD64 arg5;
-	DWORD64 arg6;
-	DWORD64 arg7;
-	DWORD64 arg8;
-	DWORD64 arg9;
-	DWORD64 arg10;
+	DWORD arg1;
+	DWORD arg2;
+	DWORD arg3;
+	DWORD arg4;
+	DWORD arg5;
+	DWORD arg6;
+	DWORD arg7;
+	DWORD arg8;
+	DWORD arg9;
+	DWORD arg10;
 };
 
+#if 0 //def _WIN64
 __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
 {
 	return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))
 		: (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))) : 0;
 }
+#else
+__declspec(noinline) DWORD Delegator(Param1* param)
+{
+	return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10) : 0;
+}
+#endif
 #endif
 
 int main()
 {
 #if 0
 	Param1 param1;
+	param1.func = (FUNC)MessageBoxA;
+	param1.arg1 = 0;
+	param1.arg2 = (DWORD)"test";
+	param1.arg3 = (DWORD)"test1";
+	param1.arg4 = MB_OK;
 	Delegator(&param1);
 #endif
 
@@ -71,7 +82,7 @@ int main()
 	}
 #endif
 
-#if 0
+#if 1
 	typedef int (NTAPI *RTL_ADJUST_PRIVILEGE)(ULONG, BOOLEAN, BOOLEAN, PBOOLEAN);
 	RTL_ADJUST_PRIVILEGE RtlAdjustPrivilege = (RTL_ADJUST_PRIVILEGE)GetProcAddress(detail::hNtDll, "RtlAdjustPrivilege");
 	RtlAdjustPrivilege(20, 1, 0, NULL);
@@ -81,7 +92,7 @@ int main()
 	PROCESSENTRY32 pe32 = { sizeof(pe32) };
 	if (Process32First(hSnapshot, &pe32)) {
 		do {
-			if (_tcsicmp(pe32.szExeFile, _T("explorer.exe")))
+			if (_tcsicmp(pe32.szExeFile, _T("qq.exe")))
 				continue;
 			HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
 
@@ -98,33 +109,49 @@ int main()
 
 #else
 
-			DWORD64 user32Dll = GetModuleHandle64(hProcess, _T("user32.dll"));
-			if(!user32Dll) continue;
+			DWORD64 user32Dll = GetModuleHandle(hProcess, _T("user32.dll"));
+			//if(!user32Dll) continue;
 
 			// sample show you how to solve CreateRemoteThread + GetExitCodeThread return partial (4/8 bytes) result problem under x64
 			// method 1:
-			DWORD64 user32Dll2 = GetModuleHandleDw64(hProcess, _T("user32.dll"));
+			//DWORD64 user32Dll2 = GetModuleHandleDw64(hProcess, _T("user32.dll"));
 
 			// method 2:
-			YAPICall GetModuleHandle(hProcess, _T("kernel32.dll"), sizeof(TCHAR) == sizeof(char) ? "GetModuleHandleA" : "GetModuleHandleW");
-			DWORD64 user32Dll1 = GetModuleHandle.Dw64()(_T("user32.dll"));
+			//YAPICall GetModuleHandle(hProcess, _T("kernel32.dll"), sizeof(TCHAR) == sizeof(char) ? "GetModuleHandleA" : "GetModuleHandleW");
+			//DWORD64 user32Dll1 = GetModuleHandle.Dw64()(_T("user32.dll"));
 
 			/*
 				DWORD WINAPI MessageBoxDelegator(MessageBoxParam* param)
-			01042340 85 C9                test        ecx,ecx  
-			01042342 74 11                je          MessageBoxDelegator+15h (01042355h)  
-			01042344 FF 71 20             push        dword ptr [ecx+20h]  
-			01042347 8B 01                mov         eax,dword ptr [ecx]  
-			01042349 FF 71 10             push        dword ptr [ecx+10h]  
-			0104234c FF 71 18             push        dword ptr [ecx+18h]  
-			0104234F FF 71 08             push        dword ptr [ecx+8]  
-			01042352 FF D0                call        eax  
-			   120: }
-			01042354 C3                   ret  
-			   119: 	return param ? (param->MessageBoxA((HWND)param->hWnd, (LPCSTR)param->lpText, (LPCSTR)param->lpCaption, param->uType)) : 0;
-			01042355 33 C0                xor         eax,eax  
-			   120: }
-			01042357 C3                   ret
+				{
+			00152A10 55                   push        ebp  
+			00152A11 8B EC                mov         ebp,esp  
+			00152A13 51                   push        ecx  
+				   return param ? (param->MessageBoxA(param->hWnd, param->lpCaption, param->lpText, param->uType)) : 0;
+			00152A14 83 7D 08 00          cmp         dword ptr [param],0  
+			00152A18 74 28                je          Delegator+32h (0152A42h)  
+			00152A1A 8B 45 08             mov         eax,dword ptr [param]  
+			00152A1D 8B 48 10             mov         ecx,dword ptr [eax+10h]  
+			00152A20 51                   push        ecx  
+			00152A21 8B 55 08             mov         edx,dword ptr [param]  
+			00152A24 8B 42 0C             mov         eax,dword ptr [edx+0Ch]  
+			00152A27 50                   push        eax  
+			00152A28 8B 4D 08             mov         ecx,dword ptr [param]  
+			00152A2B 8B 51 08             mov         edx,dword ptr [ecx+8]  
+			00152A2E 52                   push        edx  
+			00152A2F 8B 45 08             mov         eax,dword ptr [param]  
+			00152A32 8B 48 04             mov         ecx,dword ptr [eax+4]  
+			00152A35 51                   push        ecx  
+			00152A36 8B 55 08             mov         edx,dword ptr [param]  
+			00152A39 8B 02                mov         eax,dword ptr [edx]  
+			00152A3B FF D0                call        eax  
+			00152A3D 89 45 FC             mov         dword ptr [ebp-4],eax  
+			00152A40 EB 07                jmp         Delegator+39h (0152A49h)  
+			00152A42 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+			00152A49 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+				}
+			00152A4C 8B E5                mov         esp,ebp  
+			00152A4E 5D                   pop         ebp  
+			00152A4F C3                   ret  
 			*/
 			/*
 				DWORD WINAPI MessageBoxDelegator(MessageBoxParam* param)
@@ -142,18 +169,29 @@ int main()
 				}
 			00007FF69EAA109D C3                   ret 
 			*/
-			const unsigned char shellcode_x86[] = { 0x85, 0xc9, 0x74, 0x11, 0xff, 0x71, 0x20, 0x8b, 0x01, 0xff, 0x71, 0x10, 0xff, 0x71, 0x18, 0xff, 
-													0x71, 0x08, 0xff, 0xd0, 0xc3, 0x33, 0xc0, 0xc3 };
-			const unsigned char shellcode[] = { 0x48, 0x8b, 0xc1, 0x48, 0x85, 0xc9, 0x74, 0x13, 0x44, 0x8b, 0x49, 0x20, 0x4c, 0x8b, 0x41, 0x10, 
-												0x48, 0x8b, 0x51, 0x18, 0x48, 0x8b, 0x49, 0x08, 0x48, 0xff, 0x20, 0x33, 0xc0, 0xc3 };
+			const unsigned char shellcode_x86[] = { 0x55, 0x8b, 0xec, 0x51, 0x83, 0x7d, 0x08, 0x00, 0x74, 0x28, 0x8b, 0x45, 0x08, 0x8b, 0x48, 0x10, 
+										   0x51, 0x8b, 0x55, 0x08, 0x8b, 0x42, 0x0c, 0x50, 0x8b, 0x4d, 0x08, 0x8b, 0x51, 0x08, 0x52, 0x8b, 
+										   0x45, 0x08, 0x8b, 0x48, 0x04, 0x51, 0x8b, 0x55, 0x08, 0x8b, 0x02, 0xff, 0xd0, 0x89, 0x45, 0xfc, 
+										   0xeb, 0x07, 0xc7, 0x45, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x8b, 0x45, 0xfc, 0x8b, 0xe5, 0x5d, 0xc3 };
+			const unsigned char shellcode[] = { 0x48, 0x8b, 0xc1, 0x48, 0x85, 0xc9, 0x74, 0x13, 0x44, 0x8b, 0x49, 0x20, 0x4c, 0x8b, 0x41, 0x10,
+									   0x48, 0x8b, 0x51, 0x18, 0x48, 0x8b, 0x49, 0x08, 0x48, 0xff, 0x20, 0x33, 0xc0, 0xc3 };
 
 			struct MessageBoxParam {
+#ifdef _WIN64
+				DWORD64 ret;
 				DWORD64 MessageBoxA;
 				DWORD64 hWnd;
 				DWORD64 lpCaption;
 				DWORD64 lpText;
 				DWORD64 uType;
-			} param = { NULL, NULL, NULL, NULL, MB_OK };
+#else
+				DWORD MessageBoxA;
+				DWORD hWnd;
+				DWORD lpCaption;
+				DWORD lpText;
+				DWORD uType;
+#endif
+			} param;
 
 			const TCHAR* szCaption = _T("From ez8.co");
 			const TCHAR* szText = _T("Hello World!");
@@ -164,22 +202,22 @@ int main()
 			param.MessageBoxA = GetProcAddress64(hProcess, user32Dll, "MessageBoxA");
 #endif
 
-			if(!param.MessageBoxA) continue;
+			//if(!param.MessageBoxA) continue;
 
-			RemoteWriter caption(hProcess, szCaption, (lstrlen(szCaption) + 1) * sizeof(TCHAR));
+			ProcessWriter caption(hProcess, szCaption, (lstrlen(szCaption) + 1) * sizeof(TCHAR));
 			if (!(param.lpCaption = caption)) continue;
 
-			RemoteWriter text(hProcess, szText, (lstrlen(szText) + 1) * sizeof(TCHAR));
+			ProcessWriter text(hProcess, szText, (lstrlen(szText) + 1) * sizeof(TCHAR));
 			if (!(param.lpText = text)) continue;
 
-			RemoteWriter p(hProcess, &param, sizeof(param));
+			ProcessWriter p(hProcess, &param, sizeof(param), PAGE_EXECUTE_READWRITE);
 			if (!p) continue;
 
-			RemoteWriter sc(hProcess, detail::is64BitOS ? shellcode : shellcode_x86, (detail::is64BitOS ? sizeof(shellcode) : sizeof(shellcode_x86)) + 1, PAGE_EXECUTE_READWRITE);
+			ProcessWriter sc(hProcess, detail::is64BitOS ? shellcode : shellcode_x86, (detail::is64BitOS ? sizeof(shellcode) : sizeof(shellcode_x86)) + 1, PAGE_EXECUTE_READWRITE);
 			if (!sc) continue;
 			sc.SetDontRelese();
 
-			HANDLE hThread = CreateRemoteThread64(hProcess, NULL, 0, sc, p, 0, NULL);
+			HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)(DWORD64)sc, (PVOID)(DWORD64)p, 0, NULL);
 			WaitForSingleObject(hThread, 1000);
 			CloseHandle(hThread);
 #endif
@@ -191,7 +229,7 @@ int main()
 
 DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName)
 {
-	RemoteWriter modName(hProcess, moduleName, (lstrlen(moduleName) + 1) * sizeof(TCHAR));
+	ProcessWriter modName(hProcess, moduleName, (lstrlen(moduleName) + 1) * sizeof(TCHAR));
 	if (!modName) return NULL;
 
 	DWORD64 hKernel32 = GetModuleHandle64(hProcess, _T("kernel32.dll"));
@@ -208,7 +246,7 @@ DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName)
 	), modName, NULL };
 	if (!param.func) return NULL;
 
-	RemoteWriter p(hProcess, &param, sizeof(param));
+	ProcessWriter p(hProcess, &param, sizeof(param));
 	if (!p) return NULL;
 
 	const unsigned char shellcode_x86[] = { 0x56, 0x8b, 0xf1, 0x85, 0xf6, 0x74, 0x0e, 0xff, 0x76, 0x08, 0x8b, 0x06, 0xff, 0xd0, 0x99, 0x89,
@@ -252,7 +290,7 @@ DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName)
 	00007FF7E0E8109E 5B                   pop         rbx
 	00007FF7E0E8109F C3                   ret
 	*/
-	RemoteWriter sc(hProcess, detail::is64BitOS ? shellcode : shellcode_x86, (detail::is64BitOS ? sizeof(shellcode) : sizeof(shellcode_x86)) + 1, PAGE_EXECUTE_READWRITE);
+	ProcessWriter sc(hProcess, detail::is64BitOS ? shellcode : shellcode_x86, (detail::is64BitOS ? sizeof(shellcode) : sizeof(shellcode_x86)) + 1, PAGE_EXECUTE_READWRITE);
 	if (!sc) return NULL;
 
 	HANDLE hThread = CreateRemoteThread64(hProcess, NULL, 100, sc, p, 0, NULL);

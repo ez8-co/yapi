@@ -18,6 +18,9 @@
 #define NT_SUCCESS(Status)			(((NTSTATUS)(Status)) >= 0)
 #endif
 
+#include <Psapi.h>
+#pragma comment(lib, "psapi.lib")
+
 namespace detail {
 	static HMODULE hNtDll = LoadLibrary(_T("ntdll.dll"));
 	static HANDLE hCurProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
@@ -116,7 +119,6 @@ namespace yapi {
 	#define __ARG(n) P ## n
 	#define __PARAM(n) p ## n
 	#define __ARG_DECL(n) __ARG(n) __PARAM(n)
-	#define __TO_DWORD64_DECL(n) ToDWORD64(__PARAM(n), &helper)
 
 	#define TEMPLATE_ARG(n) typename __ARG(n)
 	#define VOID_TEMPLATE_ARGS(n) typename __ARG(n),
@@ -124,14 +126,8 @@ namespace yapi {
 	#define ARG_DECL(n) __ARG_DECL(n) ,
 	#define END_ARG_DECL(n) __ARG_DECL(n)
 
-	#define TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n) ,
-	#define END_TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n)
-
-	#define TO_DWORD64_ARRAY_DECL(n) param[n + 1] = ToDWORD64(__PARAM(n), _hProcess, &helper);
-
 	#define DECL_VOID_TEMPLATE_ARGS(n) REPEAT(n, VOID_TEMPLATE_ARGS, TEMPLATE_ARG)
 	#define DECL_PARAMS_LIST(n) REPEAT(n, ARG_DECL, END_ARG_DECL)
-	#define DECL_TO_DWORD64_LIST(n) REPEAT(n, TO_DWORD64_DECL, END_TO_DWORD64_DECL)
 
 	namespace {
 		template <class T>
@@ -163,6 +159,15 @@ namespace yapi {
 
 		typedef _PEB_T<DWORD>   PEB32;
 		typedef _PEB_T<DWORD64> PEB64;
+
+		typedef struct _PROCESS_BASIC_INFORMATION32 {
+			NTSTATUS ExitStatus;
+			UINT32 PebBaseAddress;
+			UINT32 AffinityMask;
+			UINT32 BasePriority;
+			UINT32 UniqueProcessId;
+			UINT32 InheritedFromUniqueProcessId;
+		} PROCESS_BASIC_INFORMATION32;
 
 		typedef struct _PROCESS_BASIC_INFORMATION64 {
 			NTSTATUS ExitStatus;
@@ -208,39 +213,105 @@ namespace yapi {
 
 		size_t tcslen(const char* str) { return strlen(str); }
 		size_t tcslen(const wchar_t* str) { return wcslen(str); }
+	}
 
-	#ifndef _WIN64
-		typedef NTSTATUS(WINAPI *NT_WOW64_QUERY_INFORMATION_PROCESS64)(
-			HANDLE ProcessHandle, UINT32 ProcessInformationClass,
-			PVOID ProcessInformation, UINT32 ProcessInformationLength,
-			UINT32* ReturnLength);
+	DWORD64 WINAPI GetProcAddress(HANDLE hProcess, DWORD64 hModule, const char* funcName);
 
-		typedef NTSTATUS(WINAPI *NT_WOW64_READ_VIRTUAL_MEMORY64)(
-			HANDLE ProcessHandle, PVOID64 BaseAddress,
-			PVOID BufferData, UINT64 BufferLength,
-			PUINT64 ReturnLength);
-
-		static NT_WOW64_QUERY_INFORMATION_PROCESS64 NtWow64QueryInformationProcess64 = (NT_WOW64_QUERY_INFORMATION_PROCESS64)GetProcAddress(detail::hNtDll, "NtWow64QueryInformationProcess64");
-		static NT_WOW64_READ_VIRTUAL_MEMORY64 NtWow64ReadVirtualMemory64 = (NT_WOW64_READ_VIRTUAL_MEMORY64)GetProcAddress(detail::hNtDll, "NtWow64ReadVirtualMemory64");
-	#else
+	#ifdef _WIN64
 		typedef NTSTATUS(WINAPI *NT_QUERY_INFORMATION_PROCESS)(
 			HANDLE ProcessHandle, ULONG ProcessInformationClass,
 			PVOID ProcessInformation, UINT32 ProcessInformationLength,
 			UINT32 * ReturnLength);
 
-		static NT_QUERY_INFORMATION_PROCESS NtQueryInformationProcess = (NT_QUERY_INFORMATION_PROCESS)GetProcAddress(detail::hNtDll, "NtQueryInformationProcess");
-	#endif
-	}
-
-	#ifdef _WIN64
-
-		#define NtWow64QueryInformationProcess64   NtQueryInformationProcess
+		static NT_QUERY_INFORMATION_PROCESS NtWow64QueryInformationProcess64 = (NT_QUERY_INFORMATION_PROCESS)GetProcAddress((HMODULE)detail::hNtDll, "NtQueryInformationProcess");
 		#define NtWow64ReadVirtualMemory64         ReadProcessMemory
 
+	#else
+
+		namespace {
+			typedef NTSTATUS(WINAPI *NT_WOW64_QUERY_INFORMATION_PROCESS64)(
+				HANDLE ProcessHandle, UINT32 ProcessInformationClass,
+				PVOID ProcessInformation, UINT32 ProcessInformationLength,
+				UINT32* ReturnLength);
+
+			typedef NTSTATUS(WINAPI *NT_WOW64_READ_VIRTUAL_MEMORY64)(
+				HANDLE ProcessHandle, PVOID64 BaseAddress,
+				PVOID BufferData, UINT64 BufferLength,
+				PUINT64 ReturnLength);
+
+			static NT_WOW64_QUERY_INFORMATION_PROCESS64 NtWow64QueryInformationProcess64 = (NT_WOW64_QUERY_INFORMATION_PROCESS64)GetProcAddress((HMODULE)detail::hNtDll, "NtWow64QueryInformationProcess64");
+			static NT_WOW64_READ_VIRTUAL_MEMORY64 NtWow64ReadVirtualMemory64 = (NT_WOW64_READ_VIRTUAL_MEMORY64)GetProcAddress((HMODULE)detail::hNtDll, "NtWow64ReadVirtualMemory64");
+		}
+
 	#endif
+
+	DWORD64 WINAPI GetModuleHandle(HANDLE hProcess, const TCHAR* moduleName)
+	{
+		if (!moduleName) return 0;
+		if (!hProcess) hProcess = detail::hCurProcess;
+
+		HMODULE hMods[512] = { 0 };
+		DWORD cbNeeded = 0;
+		TCHAR szModName[MAX_PATH];
+		EnumProcessModulesEx(hProcess, hMods, sizeof(hMods), &cbNeeded, LIST_MODULES_32BIT);
+		for (UINT i = 0; i < (cbNeeded / sizeof(HMODULE)); ++i) {
+			GetModuleBaseName(hProcess, hMods[i], szModName, _countof(szModName));
+			if (!_tcsicmp(szModName, moduleName)) {
+				return (DWORD64)hMods[i];
+				break;
+			}
+		}
+		return 0;
+	}
+
+	DWORD64 WINAPI GetProcAddress(HANDLE hProcess, DWORD64 hModule, const char* funcName)
+	{
+		if (!hModule || !funcName) return 0;
+		if (!hProcess) hProcess = detail::hCurProcess;
+
+		IMAGE_DOS_HEADER idh;
+		NTSTATUS status = ReadProcessMemory(hProcess, (PVOID)hModule, (PVOID)&idh, sizeof(idh), NULL);
+		if (!NT_SUCCESS(status)) return 0;
+
+		IMAGE_NT_HEADERS32 inh;
+		status = ReadProcessMemory(hProcess, (PVOID)(hModule + idh.e_lfanew), (PVOID)&inh, sizeof(inh), NULL);
+		if (!NT_SUCCESS(status)) return 0;
+
+		IMAGE_DATA_DIRECTORY& idd = inh.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT];
+		if (!idd.VirtualAddress)return 0;
+
+		IMAGE_EXPORT_DIRECTORY ied;
+		status = ReadProcessMemory(hProcess, (PVOID)(hModule + idd.VirtualAddress), (PVOID)&ied, sizeof(ied), NULL);
+		if (!NT_SUCCESS(status)) return 0;
+
+		std::vector<DWORD> nameTable(ied.NumberOfNames);
+		status = ReadProcessMemory(hProcess, (PVOID)(hModule + ied.AddressOfNames), (PVOID)&nameTable[0], sizeof(DWORD) * ied.NumberOfNames, NULL);
+		if (!NT_SUCCESS(status)) return 0;
+
+		for (DWORD i = 0; i < ied.NumberOfNames; ++i) {
+			std::string func(strlen(funcName), 0);
+			status = ReadProcessMemory(hProcess, (PVOID)(hModule + nameTable[i]), (PVOID)&func[0], strlen(funcName), NULL);
+			if (!NT_SUCCESS(status)) continue;
+
+			if (func == funcName) {
+				std::vector<DWORD> rvaTable(ied.NumberOfFunctions);
+				status = ReadProcessMemory(hProcess, (PVOID)(hModule + ied.AddressOfFunctions), (PVOID)&rvaTable[0], sizeof(DWORD) * ied.NumberOfFunctions, NULL);
+
+				std::vector<WORD> ordTable(ied.NumberOfFunctions);
+				status = ReadProcessMemory(hProcess, (PVOID)(hModule + ied.AddressOfNameOrdinals), (PVOID)&ordTable[0], sizeof(WORD) * ied.NumberOfFunctions, NULL);
+				if (!NT_SUCCESS(status)) continue;
+
+				return hModule + rvaTable[ordTable[i]];
+			}
+		}
+		return 0;
+	}
 
 	DWORD64 WINAPI GetModuleHandle64(HANDLE hProcess, const TCHAR* moduleName)
 	{
+		if (!moduleName) return 0;
+		if (!hProcess) hProcess = detail::hCurProcess;
+
 	#ifndef _WIN64
 		if (!NtWow64QueryInformationProcess64 || !NtWow64ReadVirtualMemory64) return 0;
 	#endif
@@ -250,53 +321,40 @@ namespace yapi {
 		NTSTATUS status = NtWow64QueryInformationProcess64(hProcess, ProcessBasicInformation, &pbi, sizeof(pbi), NULL);
 		if (!NT_SUCCESS(status)) return 0;
 
-		// pbi.Reserved0 is not zero under 32 bit OS
-		BOOL is32bit = pbi.Reserved0 > 0;
-		DWORD64 pebAddr = is32bit ? pbi.Reserved0 : pbi.PebBaseAddress;
-
 		PEB64 peb;
-		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)pebAddr, &peb, is32bit ? sizeof(PEB32) : sizeof(peb), NULL);
+		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)pbi.PebBaseAddress, &peb, sizeof(peb), NULL);
 		if (!NT_SUCCESS(status)) return 0;
-
-		DWORD64 ldrAddr = is32bit ? ((PEB32*)&peb)->Ldr : peb.Ldr;
 
 		PEB_LDR_DATA64 ldr;
-		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)ldrAddr, (PVOID)&ldr, is32bit ? sizeof(PEB_LDR_DATA32) : sizeof(ldr), NULL);
+		status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)peb.Ldr, (PVOID)&ldr, sizeof(ldr), NULL);
 		if (!NT_SUCCESS(status)) return 0;
 
-		DWORD64 LastEntry = ldrAddr + (is32bit ? offsetof(PEB_LDR_DATA32, InLoadOrderModuleList) : offsetof(PEB_LDR_DATA64, InLoadOrderModuleList));
+		DWORD64 LastEntry = peb.Ldr + offsetof(PEB_LDR_DATA64, InLoadOrderModuleList);
 
 		LDR_DATA_TABLE_ENTRY64 head;
 		head.InLoadOrderLinks.Flink = ldr.InLoadOrderModuleList.Flink;
-		DWORD64 Flink = 0;
 		do {
-			Flink = is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->InLoadOrderLinks.Flink : head.InLoadOrderLinks.Flink;
-
-			status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)Flink, (PVOID)&head, is32bit ? sizeof(LDR_DATA_TABLE_ENTRY32) : sizeof(head), NULL);
+			status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)head.InLoadOrderLinks.Flink, (PVOID)&head, sizeof(head), NULL);
 			if (!NT_SUCCESS(status)) continue;
 
-			DWORD64 length = is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->BaseDllName.MaximumLength : head.BaseDllName.MaximumLength;
-			std::wstring modName((size_t)length, 0);
-			DWORD64 buffer = is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->BaseDllName.Buffer : head.BaseDllName.Buffer;
-			status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)buffer, (PVOID)&modName[0], length, NULL);
+			std::wstring modName((size_t)head.BaseDllName.MaximumLength, 0);
+			status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)head.BaseDllName.Buffer, (PVOID)&modName[0], head.BaseDllName.MaximumLength, NULL);
 			if (!NT_SUCCESS(status)) continue;
 
 			if (!_tcsicmp(moduleName, _W2T(modName).c_str()))
-				return is32bit ? ((LDR_DATA_TABLE_ENTRY32*)&head)->DllBase : head.DllBase;
-		} while (Flink != LastEntry);
+				return head.DllBase;
+		} while (head.InLoadOrderLinks.Flink != LastEntry);
 		return 0;
 	}
 
 	DWORD64 WINAPI GetProcAddress64(HANDLE hProcess, DWORD64 hModule, const char* funcName)
 	{
-		if (!hModule) return 0;
+		if (!hModule || !funcName) return 0;
+		if (!hProcess) hProcess = detail::hCurProcess;
 
-	#ifndef _WIN64
+#ifndef _WIN64
 		if (!NtWow64ReadVirtualMemory64) return 0;
-	#endif
-
-		if (!hProcess)
-			hProcess = detail::hCurProcess;
+#endif
 
 		IMAGE_DOS_HEADER idh;
 		NTSTATUS status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)hModule, (PVOID)&idh, sizeof(idh), NULL);
@@ -336,6 +394,45 @@ namespace yapi {
 		return 0;
 	}
 
+	HANDLE WINAPI CreateRemoteThread32(HANDLE hProcess,
+										LPSECURITY_ATTRIBUTES lpThreadAttributes,
+										SIZE_T dwStackSize,
+										DWORD64 lpStartAddress,
+										DWORD64 lpParameter,
+										DWORD dwCreationFlags,
+										LPDWORD lpThreadId)
+	{
+		typedef DWORD(WINAPI * RTL_CREATE_USER_THREAD)(HANDLE      ProcessHandle,
+														PSECURITY_DESCRIPTOR  SecurityDescriptor,
+														BOOL      CreateSuspended,
+														ULONG     StackZeroBits,
+														PULONG     StackReserved,
+														PULONG     StackCommit,
+														LPVOID     StartAddress,
+														LPVOID     StartParameter,
+														HANDLE      ThreadHandle,
+														LPVOID     ClientID);
+		RTL_CREATE_USER_THREAD RtlCreateUserThread = (RTL_CREATE_USER_THREAD)GetProcAddress(detail::hNtDll, "RtlCreateUserThread");
+		if (!RtlCreateUserThread) return 0;
+
+		BOOLEAN createSuspended = dwCreationFlags & CREATE_SUSPENDED;
+		ULONG stackSize = dwStackSize;
+		DWORD64 handle = 0;
+		DWORD64 status = RtlCreateUserThread(hProcess, lpThreadAttributes, createSuspended, 0, (dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION) ? &stackSize : NULL, &stackSize, (LPTHREAD_START_ROUTINE)lpStartAddress, (PVOID)lpParameter, &handle, NULL);
+		if (!status) return (HANDLE)handle;
+
+		SetLastError((DWORD)status);
+		return NULL;
+	}
+
+	DWORD64 GetNtDll64()
+    {
+		static DWORD64 hNtdll64 = 0;
+		if(hNtdll64) return hNtdll64;
+		hNtdll64 = GetModuleHandle64(detail::hCurProcess, _T("ntdll.dll"));
+		return hNtdll64;
+	}
+
 	#ifdef _WIN64
 
 		#define SetLastError64       SetLastError
@@ -348,20 +445,7 @@ namespace yapi {
 		#define LoadLibrary64        LoadLibrary
 		#define CreateRemoteThread64 CreateRemoteThread
 
-	    DWORD64 GetNtDll64()
-	    {
-	        return (DWORD64)detail::hNtDll;
-	    }
-
 	#else
-
-		DWORD64 GetNtDll64()
-	    {
-			static DWORD64 hNtdll64 = 0;
-			if(hNtdll64) return hNtdll64;
-			hNtdll64 = GetModuleHandle64(detail::hCurProcess, _T("ntdll.dll"));
-			return hNtdll64;
-		}
 
 		namespace {
 			#define _(x) __asm __emit (x)
@@ -402,7 +486,7 @@ namespace yapi {
 	                name = new _UNICODE_STRING_T<DWORD64>;
 	                name->Buffer = (DWORD64)v;
 	                name->Length = (WORD)tcslen(v) * sizeof(char_t);
-	                name->MaximumLength = (name->Length + 1) * sizeof(char_t);
+	                name->MaximumLength = name->Length;
 	            }
 	            virtual void gc() { delete name; }
 	            virtual DWORD64 toDWORD64() { return (DWORD64)name; }
@@ -428,10 +512,18 @@ namespace yapi {
 			operator DWORD64() { return func; }
 
 			DWORD64 operator()() { return func && x64Call(func, 0); }
-		#define CALLERS(n) template<DECL_VOID_TEMPLATE_ARGS(n)> DWORD64 operator()(DECL_PARAMS_LIST(n)) { detail::GCHelper helper; return func && x64Call(func, n, DECL_TO_DWORD64_LIST(n)); }
+
+
+		#define __TO_DWORD64_DECL(n) ToDWORD64(__PARAM(n), &helper)
+		#define TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n) ,
+		#define END_TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n)
+		#define CALLERS(n) template<DECL_VOID_TEMPLATE_ARGS(n)> DWORD64 operator()(DECL_PARAMS_LIST(n)) { detail::GCHelper helper; return func && x64Call(func, n, REPEAT(n, TO_DWORD64_DECL, END_TO_DWORD64_DECL)); }
 			CALLERS( 1) CALLERS( 2) CALLERS( 3) CALLERS( 4) CALLERS( 5) CALLERS( 6) CALLERS( 7) CALLERS( 8) CALLERS( 9) CALLERS(10)
 			CALLERS(11) CALLERS(12) CALLERS(13) CALLERS(14) CALLERS(15) CALLERS(16) CALLERS(17) CALLERS(18) CALLERS(19) CALLERS(20)
 		#undef CALLERS
+		#undef END_TO_DWORD64_DECL
+		#undef TO_DWORD64_DECL
+		#undef __TO_DWORD64_DECL
 		};
 
 		VOID WINAPI SetLastError64(DWORD64 status)
@@ -569,11 +661,11 @@ namespace yapi {
 
 	#endif
 
-	class RemoteWriter
+	class ProcessWriter
 	{
 	public:
 		template<typename T>
-		RemoteWriter(HANDLE hProcess, T content, SIZE_T dwSize, DWORD flProtect = PAGE_READWRITE)
+		ProcessWriter(HANDLE hProcess, T content, SIZE_T dwSize, DWORD flProtect = PAGE_READWRITE)
 			: _autoRelease(TRUE)
 			, _hProcess(hProcess)
 			, _dw64Address(0)
@@ -587,7 +679,7 @@ namespace yapi {
 				_dw64Address = 0;
 			}
 		}
-		~RemoteWriter() {
+		~ProcessWriter() {
 			if (_dw64Address && _autoRelease)
 				VirtualFreeEx64(_hProcess, _dw64Address, _dwSize, MEM_DECOMMIT);
 		}
@@ -617,26 +709,26 @@ namespace yapi {
 
 	namespace {
 
-		std::string makeShellCode(int cnt)
+		std::string makeShellCode(int cnt, bool is64Bit)
 		{
-			if (detail::is64BitOS) {
+			if(is64Bit) {
 				static const unsigned char kTmpl_x64[] = { 0x40, 0x53, 0x48, 0x83, 0xec, 0x20, 0x48, 0x8b, 0xd9, 0x48, 0x85, 0xc9, 0x74, 0x1d, 0x48, 0x83, 
 														   0x39, 0x00, 0x48, 0x8b, 0x41, 0x08, 0x74, 0x0b, 0xff, 0xd0, 0x48, 0x89, 0x03, 0x48, 0x83, 0xc4, 
 														   0x20, 0x5b, 0xc3, 0x48, 0x83, 0xc4, 0x20, 0x5b, 0x48, 0xff, 0xe0, 0x33, 0xc0, 0x48, 0x83, 0xc4, 
 														   0x20, 0x5b, 0xc3 };
 
 				std::string templ_x64((const char*)kTmpl_x64, sizeof(kTmpl_x64));
-				if (!cnt) return templ_x64;
+				if(!cnt) return templ_x64;
 
 				templ_x64[13] += (cnt <= 4) ? cnt * 4 : (cnt - 4) * 9 + 16;
 				if(cnt >= 1)
 					templ_x64[16] = 0x3b;
 
-				if (cnt < 3) {
-					if (cnt >= 1) {
+				if(cnt < 3) {
+					if(cnt >= 1) {
 						templ_x64.insert(22, "\x48\x8b\x49\x10", 4);
 					}
-					if (cnt >= 2) {
+					if(cnt >= 2) {
 						templ_x64.insert(22, "\x48\x8b\x51\x18", 4);
 					}
 				}
@@ -646,14 +738,14 @@ namespace yapi {
 					templ_x64.insert(22, "\x48\x8B\x53\x18", 4);
 					templ_x64.insert(22, "\x4c\x8b\x43\x20", 4);
 					templ_x64.insert(22, "\x48\x8b\x43\x08", 4);
-					if (cnt >= 4) {
+					if(cnt >= 4) {
 						templ_x64.insert(26, "\x4c\x8b\x4b\x28", 4);
 					}
-					if (cnt >= 5) {
+					if(cnt >= 5) {
 						templ_x64.insert(18, "\x4c\x8B\x53\x30", 4);
 						templ_x64.insert(42, "\x4c\x89\x54\x24\x20", 5);
 					}
-					if (cnt >= 6) {
+					if(cnt >= 6) {
 						templ_x64[21] = 0x38;
 						templ_x64.insert(22, "\x4c\x8b\x5b\x30", 4);
 						templ_x64[50] = 0x28;
@@ -663,29 +755,46 @@ namespace yapi {
 				}
 				return templ_x64;
 			}
-			static const unsigned char kTmpl_x86[] = { 0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8, 0x51, 0x56, 0x8b, 0xf1, 0x85, 0xf6, 0x74, 0xcc, 0x8b, 0x46,
-													   0x08, 0xff, 0xd0, 0x99, 0x83, 0xc4, 0xcc, 0x89, 0x06, 0x89, 0x56, 0x04, 0x33, 0xc0, 0x5e, 0xc3 };
+			static const unsigned char kTmpl_x86[] = { 0x55, 0x8b, 0xec, 0x51, 0x83, 0x7d, 0x08, 0x00, 0x74, 0x0c, 0x8b ,0x45, 0x08, 0x8b, 0x08, 0xff, 
+													   0xd0, 0x89, 0x45, 0xfc, 0xeb, 0x07, 0xc7, 0x45, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x8b, 0x45, 0xfc,
+													   0x8b, 0xe5, 0x5d, 0xc3 };
 			std::string templ_x86((const char*)kTmpl_x86, sizeof(kTmpl_x86));
-			// je
-			templ_x86[13] = cnt ? (0x0e + 6 * cnt) : 0x0b;
-			// esp balance
-			templ_x86[22] = (cnt << 3);
-			// push        dword ptr [esi+xxh]
-			if (cnt) {
-				templ_x86.insert(14, "\xff\x76\x0c", 3);
-				templ_x86[16] += (cnt << 3);
-				templ_x86.insert(20, "\xff\x76\x10", 3);
+			// je distance
+			templ_x86[9] += cnt * 7;
+			templ_x86[16] += ((1 - cnt) % 3 + 3) % 3;
+			int pos = 13;
+			for(int i = 0; i < cnt; ++i) {
+				switch(i % 3) {
+					case 0:
+						templ_x86.insert(pos, "\x8b\x48\xcc\x51\x8b\x55\x08", 7);
+						break;
+					case 1:
+						templ_x86.insert(pos, "\x8b\x42\xcc\x50\x8b\x4d\x08", 7);
+						break;
+					case 2:
+						templ_x86.insert(pos, "\x8b\x51\xcc\x52\x8b\x45\x08", 7);
+						break;
+				}
+				templ_x86[pos + 2] = (cnt - i) << 2;
+				pos += 7;
 			}
-			for (int i = 0; i < (cnt - 1) * 2; ++i) {
-				templ_x86.insert(20, "\xff\x76\x14", 3);
-				templ_x86[22] += (i << 2);
+			switch(cnt % 3) {
+				case 0:
+					templ_x86[pos + 1] = 0x08;
+					break;
+				case 1:
+					templ_x86[pos + 1] = 0x02;
+					break;
+				case 2:
+					templ_x86[pos + 1] = 0x11;
+					break;
 			}
 			return templ_x86;
 		}
 
-		template<int argCnt>
+		template<int argCnt, bool is64Bit>
 		const std::string& shellCode() {
-			static std::string kCode = makeShellCode(argCnt);
+			static std::string kCode = makeShellCode(argCnt, is64Bit);
 			return kCode;
 		}
 
@@ -701,12 +810,12 @@ namespace yapi {
 	    struct StringHelper : detail::GCBase
 	    {
 	        StringHelper(HANDLE hProcess, const char_t* v) : name(0) {
-				name = new RemoteWriter(hProcess, v, (tcslen(v) + 1) * sizeof(char_t));
+				name = new ProcessWriter(hProcess, v, (tcslen(v) + 1) * sizeof(char_t));
 	        }
 	        virtual void gc() { delete name; }
 	        virtual DWORD64 toDWORD64() { return (DWORD64)*name; }
 		private:
-	        RemoteWriter* name;
+	        ProcessWriter* name;
 	    };
 		template<> DWORD64 ToDWORD64<const char*>(const char* v, HANDLE hProcess, detail::GCHelper* helper) { return helper->add(new StringHelper<char>(hProcess, v)); }
 		template<> DWORD64 ToDWORD64<const wchar_t*>(const wchar_t* v, HANDLE hProcess, detail::GCHelper* helper) { return helper->add(new StringHelper<wchar_t>(hProcess, v)); }
@@ -715,30 +824,37 @@ namespace yapi {
 
 	private:
 		HANDLE _hProcess;
-		RemoteWriter* _sc;
+		ProcessWriter* _sc;
 		DWORD64 func;
 		BOOL _dw64Ret;
 		DWORD _dwTimeout;
+		BOOL _is64Bit;
 
 		template<int argCnt>
-		bool initShellCoder(RemoteWriter*& sc) {
+		bool initShellCoder(ProcessWriter*& sc) {
 			if(sc) return false;
-			const std::string& shellcode = shellCode<argCnt>();
-			sc = new RemoteWriter(_hProcess, shellcode.data(), shellcode.size() + 1, PAGE_EXECUTE_READWRITE);
+			const std::string& shellcode = _is64Bit ? shellCode<argCnt, 1>() : shellCode<argCnt, 0>();
+			sc = new ProcessWriter(_hProcess, shellcode.data(), shellcode.size() + 1, PAGE_EXECUTE_READWRITE);
 			sc->SetDontRelese();
 			return true;
 		}
 
-		DWORD64 call(const std::vector<DWORD64>& param) {
-			RemoteWriter p(_hProcess, &param[0], sizeof(DWORD64) * (param.size()));
+		template<typename T>
+		DWORD64 call(const std::vector<T>& param) {
+			ProcessWriter p(_hProcess, &param[0], sizeof(T) * (param.size()));
 			if (!p) return -1;
-			HANDLE hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);
+			HANDLE hThread = 0;
+			if (_is64Bit)
+				hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);
+			else
+				hThread = CreateRemoteThread32(_hProcess, NULL, 0, *_sc, p, 0, NULL);
+				// x64 call x86 TODO
 			if (!hThread) return -1;
 			if (WaitForSingleObject(hThread, _dwTimeout) != WAIT_OBJECT_0) {
 				CloseHandle(hThread);
 				return -1;
 			}
-			if (!_dw64Ret) {
+			if (!_is64Bit || !_dw64Ret) {
 				DWORD ret = 0;
 				GetExitCodeThread(hThread, &ret);
 				CloseHandle(hThread);
@@ -757,6 +873,7 @@ namespace yapi {
 			, func(GetProcAddress64(hProcess, GetNtDll64(), funcName))
 			, _dw64Ret(FALSE)
 			, _dwTimeout(INFINITE)
+			, _is64Bit(detail::is64BitOS)
 		{
 		}
 		YAPICall(HANDLE hProcess, DWORD64 moudle, const char* funcName)
@@ -765,6 +882,7 @@ namespace yapi {
 			, func(GetProcAddress64(hProcess, moudle, funcName))
 			, _dw64Ret(FALSE)
 			, _dwTimeout(INFINITE)
+			, _is64Bit(detail::is64BitOS)
 		{
 		}
 		YAPICall(HANDLE hProcess, const TCHAR* modName, const char* funcName)
@@ -773,7 +891,12 @@ namespace yapi {
 			, func(GetProcAddress64(hProcess, GetModuleHandle64(hProcess, modName), funcName))
 			, _dw64Ret(FALSE)
 			, _dwTimeout(INFINITE)
+			, _is64Bit(detail::is64BitOS)
 		{
+			if(!func) {
+				func = GetProcAddress(hProcess, GetModuleHandle(hProcess, modName), funcName);
+				_is64Bit = FALSE;
+			}
 		}
 
 		~YAPICall() { if (_sc) delete _sc; }
@@ -783,16 +906,25 @@ namespace yapi {
 		YAPICall& Dw64() { _dw64Ret = TRUE; return *this;  }
 		YAPICall& Timeout(DWORD dwTimeout) { _dwTimeout = dwTimeout; return *this; }
 
+	#define TO_DWORD64_ARRAY_DECL(n) param[n + 1] = ToDWORD64(__PARAM(n), _hProcess, &helper);
+	#define TO_DWORD_ARRAY_DECL(n) param[n] = (DWORD)ToDWORD64(__PARAM(n), _hProcess, &helper);
+
 	#define CALLERSX(n) \
 		DWORD64 operator()(DECL_PARAMS_LIST(n)) {\
 			static bool b = initShellCoder<n>(_sc);\
 			if(!func || !_sc || !*_sc) return -1;\
 			detail::GCHelper helper;\
-			std::vector<DWORD64> param(n + 2, 0);\
-			param[0] = _dw64Ret;\
-			param[1] = func;\
-			REPEAT(n, TO_DWORD64_ARRAY_DECL, TO_DWORD64_ARRAY_DECL)\
-			return call(param);\
+			if(_is64Bit) {\
+				std::vector<DWORD64> param(n + 2, 0);\
+				param[0] = _dw64Ret;\
+				param[1] = func;\
+				REPEAT(n, TO_DWORD64_ARRAY_DECL, TO_DWORD64_ARRAY_DECL)\
+				return call<DWORD64>(param);\
+			}\
+			std::vector<DWORD> param(n + 1, 0);\
+			param[0] = (DWORD)func;\
+			REPEAT(n, TO_DWORD_ARRAY_DECL, TO_DWORD_ARRAY_DECL)\
+			return call<DWORD>(param);\
 		}
 	#define CALLERS(n) template<DECL_VOID_TEMPLATE_ARGS(n)> CALLERSX(n)
 		CALLERSX( 0)
@@ -800,6 +932,8 @@ namespace yapi {
 		CALLERS(11) CALLERS(12) CALLERS(13) CALLERS(14) CALLERS(15) CALLERS(16) CALLERS(17) CALLERS(18) CALLERS(19) CALLERS(20)*/
 	#undef CALLERSX
 	#undef CALLERS
+	#undef TO_DWORD_ARRAY_DECL
+	#undef TO_DWORD64_ARRAY_DECL
 	};
 
 	#define YAPI(h, m, f) YAPICall(h, m, #f)
