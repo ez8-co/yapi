@@ -102,6 +102,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
 - 64-bit result example (`GetModuleHandle` of `user32.dll` under x64)
 
     ```cpp
+        YAPICall GetModuleHandle(hProcess, _T("kernel32.dll"), sizeof(TCHAR) == sizeof(char) ? "GetModuleHandleA" : "GetModuleHandleW");
         DWORD64 user32Dll = GetModuleHandle.Dw64()(_T("user32.dll"));
     ```
 
