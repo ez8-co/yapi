@@ -51,7 +51,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
     | ProcessWriter    | :white_check_mark: | :white_check_mark: |
     | YAPICall     | :white_check_mark: | :white_check_mark: |
 
-- `X64Call` example (Unload local dll at `dllBaseAddr`)
+- `X64Call` example (Unload dll at `dllBaseAddr` in remote process)
 
     ```cpp
         X64Call RtlCreateUserThread("RtlCreateUserThread");
@@ -131,6 +131,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 - x64 process inject to wow64 process:
   - Use trampoline:
     - `CreateRemoteThread`(x64): x64 shell code with x86 mode switch (1 arg: function->x86 shell code with one param, param->packed x86 structure) -> pass packed structure (x86 real to call function address and params) to x86 shell code -> pass params to real function.
+  - **NOTICE: function address should be valid in target process, and but not source injector.**
 
 - 64-bit result:
   - Add a `DWORD64` result field to package.
