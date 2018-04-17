@@ -62,7 +62,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
         // Validate LdrUnloadDll
         if (!LdrUnloadDll) return 0;
 
-        // Local-like call
+        // => local-like call
         DWORD64 ret = RtlCreateUserThread(hProcess, NULL, FALSE, 0, 0, NULL, LdrUnloadDll, dllBaseAddr, NULL, NULL);
     ```
 
@@ -77,11 +77,16 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 
     ```cpp
         YAPICall MessageBoxA(hProcess, _T("user32.dll"), "MessageBoxA");
+
+        // => local-like call
         MessageBoxA(NULL, "MessageBoxA : Hello World!", "From ez8.co", MB_OK);
 
-        YAPI(hProcess, _T("user32.dll"), MessageBoxW)(NULL, L"MessageBoxW: Hello World!", L"From ez8.co", MB_OK);
+        YAPI(hProcess, _T("user32.dll"), MessageBoxW)
+            (NULL, L"MessageBoxW: Hello World!", L"From ez8.co", MB_OK);
 
         YAPICall GetCurrentProcessId(hProcess, _T("kernel32.dll"), "GetCurrentProcessId");
+
+        // => local-like call
         DWORD pid = GetCurrentProcessId();
         _tprintf(_T("Result: %d\n"), pid);
     ```
@@ -119,18 +124,18 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
   - Pack function address and params in one structure and use shell code to execute in remote process.
   - See `X86/X64Delegator_disassemble` for details in [disassemble directory](https://github.com/ez8-co/yapi/tree/master/disassemble).
 
-- x64Call:
+- x64 call for wow64 process:
   - Switch to x64 mode
   - See [References](#references) for details.
 
-- x64 inject wow64:
+- x64 process inject to wow64 process:
   - Use trampoline:
-    - CreateRemoteThread(x64): x64 shell code with x86 mode switch (1 arg: function->x86 shell code with one param, param->packed x86 structure) -> pass packed structure (x86 real to call function address and params) to x86 shell code -> pass params to real function.
+    - `CreateRemoteThread`(x64): x64 shell code with x86 mode switch (1 arg: function->x86 shell code with one param, param->packed x86 structure) -> pass packed structure (x86 real to call function address and params) to x86 shell code -> pass params to real function.
 
 - 64-bit result:
-  - Add a `DWORD64` field to package.
+  - Add a `DWORD64` result field to package.
   - Obtain result if needed.
-  - ReadMemory after remote thread finished.
+  - `ReadProcessMemory` after remote thread finished.
 
 # Compatibility
 
