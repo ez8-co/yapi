@@ -69,8 +69,8 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
     - Available constructors: specified module is allowed (`ntdll.dll` as default)
     
     ```cpp
-        X64Call(const char* funcName)
-        X64Call(DWORD64 module, const char* funcName)
+        X64Call(const char* funcName);
+        X64Call(DWORD64 module, const char* funcName);
     ```
 
 - `YAPICall` example (`MessageBox` in remote process)
@@ -91,13 +91,12 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
         _tprintf(_T("Result: %d\n"), pid);
     ```
 
-    - Available constructors: specified module or module name is allowed (`ntdll.dll` as default).
-      - **If failed to fetch x64 module, will automaticly fetch 32-bit modules in wow64 process under x64 OS**.
+    - Available constructors: specified module or module name is allowed (`ntdll.dll` as default). **NOTICE: If failed to fetch x64 module, will automatically fetch 32-bit modules in wow64 process under x64 OS**.
 
     ```cpp
-        YAPICall(HANDLE hProcess, const char* funcName)
-        YAPICall(HANDLE hProcess, DWORD64 moudle, const char* funcName)
-        YAPICall(HANDLE hProcess, const TCHAR* modName, const char* funcName)
+        YAPICall(HANDLE hProcess, const char* funcName);
+        YAPICall(HANDLE hProcess, DWORD64 moudle, const char* funcName);
+        YAPICall(HANDLE hProcess, const TCHAR* modName, const char* funcName);
     ```
 
 - 64-bit result example (`GetModuleHandle` of `user32.dll` under x64)
@@ -129,7 +128,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
   - See [References](#references) for details.
 
 - x64 process inject to wow64 process:
-  - Use trampoline:
+  - **Use trampoline:**
     - `CreateRemoteThread`(x64): x64 shell code with x86 mode switch (1 arg: function->x86 shell code with one param, param->packed x86 structure) -> pass packed structure (x86 real to call function address and params) to x86 shell code -> pass params to real function.
   - **NOTICE: function address should be valid in target process, and but not source injector.**
 
