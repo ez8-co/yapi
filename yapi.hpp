@@ -18,8 +18,7 @@
 #define NT_SUCCESS(Status)			(((NTSTATUS)(Status)) >= 0)
 #endif
 
-#include <Psapi.h>
-#pragma comment(lib, "psapi.lib")
+#include <TlHelp32.h>
 
 namespace detail {
 	static HMODULE hNtDll = LoadLibrary(_T("ntdll.dll"));
@@ -250,17 +249,18 @@ namespace yapi {
 		if (!moduleName) return 0;
 		if (!hProcess) hProcess = detail::hCurProcess;
 
-		HMODULE hMods[512] = { 0 };
-		DWORD cbNeeded = 0;
-		TCHAR szModName[MAX_PATH];
-		EnumProcessModulesEx(hProcess, hMods, sizeof(hMods), &cbNeeded, LIST_MODULES_32BIT);
-		for (UINT i = 0; i < (cbNeeded / sizeof(HMODULE)); ++i) {
-			GetModuleBaseName(hProcess, hMods[i], szModName, _countof(szModName));
-			if (!_tcsicmp(szModName, moduleName)) {
-				return (DWORD64)hMods[i];
-				break;
-			}
+		HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, GetProcessId(hProcess));
+		if (hSnap == INVALID_HANDLE_VALUE) return 0;
+		MODULEENTRY32 mod = { sizeof(mod) };
+		if (Module32First(hSnap, &mod)) {
+			do {
+				if (!_tcsicmp(mod.szModule, moduleName)) {
+					CloseHandle(hSnap);
+					return (DWORD64)mod.hModule;
+				}
+			} while (Module32Next(hSnap, &mod));
 		}
+		CloseHandle(hSnap);
 		return 0;
 	}
 
@@ -477,12 +477,11 @@ namespace yapi {
 
 		public:
 			X64Call(const char* funcName)                 : func(GetProcAddress64(0, GetNtDll64(), funcName)) {}
-			X64Call(DWORD64 hNtdll, const char* funcName) : func(GetProcAddress64(0, hNtdll, funcName))       {}
+			X64Call(DWORD64 module, const char* funcName) : func(GetProcAddress64(0, module, funcName))       {}
 
 			operator DWORD64() { return func; }
 
 			DWORD64 operator()() { return func && x64Call(func, 0); }
-
 
 		#define __TO_DWORD64_DECL(n) ToDWORD64(__PARAM(n), &helper)
 		#define TO_DWORD64_DECL(n) __TO_DWORD64_DECL(n) ,

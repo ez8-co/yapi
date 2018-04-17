@@ -9,53 +9,10 @@
 #include "stdafx.h"
 #include "../yapi.hpp"
 
-#include <TlHelp32.h>
-
 using namespace yapi;
-
-DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName);
-
-#if 1
-typedef DWORD (WINAPI* FUNC)(DWORD);
-struct Param1 {
-	FUNC func;
-	DWORD arg1;
-	DWORD arg2;
-	DWORD arg3;
-	DWORD arg4;
-	DWORD arg5;
-	DWORD arg6;
-	DWORD arg7;
-	DWORD arg8;
-	DWORD arg9;
-	DWORD arg10;
-};
-
-#if 1 //def _WIN64
-__declspec(noinline) DWORD WINAPI Delegator(Param1* param)
-{
-	return param->func(param->arg1);
-}
-#else
-__declspec(noinline) DWORD Delegator(Param1* param)
-{
-	return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10) : 0;
-}
-#endif
-#endif
 
 int main()
 {
-#if 0
-	Param1 param1;
-	param1.func = (FUNC)MessageBoxA;
-	param1.arg1 = 0;
-	param1.arg2 = (DWORD)"test";
-	param1.arg3 = (DWORD)"test1";
-	param1.arg4 = MB_OK;
-	Delegator(&param1);
-#endif
-
 #if 0
 	// bellow shows how to use like windows API
 	X64Call RtlCreateUserThread("RtlCreateUserThread");
@@ -67,21 +24,20 @@ int main()
 	PROCESSENTRY32 pe32 = { sizeof(pe32) };
 	if (Process32First(hSnapshot, &pe32)) {
 		do {
-			// _tprintf_s(_T("%s [%u]\n"), pe32.szExeFile, pe32.th32ProcessID);
 			HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
 			BOOL isRemoteWow64 = FALSE;
 			IsWow64Process(hProcess, &isRemoteWow64);
 			if (!isRemoteWow64) {
-				DWORD64 wow64DllBaseAddr = GetModuleHandle64(hProcess, _T("x64.dll"));
-				if (wow64DllBaseAddr) {
-					DWORD64 ret = RtlCreateUserThread(hProcess, NULL, FALSE, 0, 0, NULL, LdrUnloadDll, wow64DllBaseAddr, NULL, NULL);
+				DWORD64 dllBaseAddr = GetModuleHandle64(hProcess, _T("x64.dll"));
+				if (dllBaseAddr) {
+					DWORD64 ret = RtlCreateUserThread(hProcess, NULL, FALSE, 0, 0, NULL, LdrUnloadDll, dllBaseAddr, NULL, NULL);
 				}
 			}
 		} while (Process32Next(hSnapshot, &pe32));
 	}
 #endif
 
-#if 1
+#if 0
 	typedef int (NTAPI *RTL_ADJUST_PRIVILEGE)(ULONG, BOOLEAN, BOOLEAN, PBOOLEAN);
 	RTL_ADJUST_PRIVILEGE RtlAdjustPrivilege = (RTL_ADJUST_PRIVILEGE)GetProcAddress(detail::hNtDll, "RtlAdjustPrivilege");
 	RtlAdjustPrivilege(20, 1, 0, NULL);
@@ -104,6 +60,7 @@ int main()
 
 			YAPICall GetCurrentProcessId(hProcess, _T("kernel32.dll"), "GetCurrentProcessId");
 			DWORD pid = GetCurrentProcessId();
+			_tprintf(_T("[%d]%s => %d\n"), pe32.th32ProcessID, pe32.szExeFile, pid);
 
 #else
 
@@ -112,11 +69,12 @@ int main()
 
 			// sample show you how to solve CreateRemoteThread + GetExitCodeThread return partial (4/8 bytes) result problem under x64
 			// method 1:
-			//DWORD64 user32Dll2 = GetModuleHandleDw64(hProcess, _T("user32.dll"));
+			// DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName);
+			// DWORD64 user32Dll2 = GetModuleHandleDw64(hProcess, _T("user32.dll"));
 
 			// method 2:
-			//YAPICall GetModuleHandle(hProcess, _T("kernel32.dll"), sizeof(TCHAR) == sizeof(char) ? "GetModuleHandleA" : "GetModuleHandleW");
-			//DWORD64 user32Dll1 = GetModuleHandle.Dw64()(_T("user32.dll"));
+			// YAPICall GetModuleHandle(hProcess, _T("kernel32.dll"), sizeof(TCHAR) == sizeof(char) ? "GetModuleHandleA" : "GetModuleHandleW");
+			// DWORD64 user32Dll1 = GetModuleHandle.Dw64()(_T("user32.dll"));
 
 			/*
 				DWORD WINAPI MessageBoxDelegator(MessageBoxParam* param)
@@ -225,6 +183,7 @@ int main()
     return 0;
 }
 
+#if 0
 DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName)
 {
 	ProcessWriter modName(hProcess, moduleName, (lstrlen(moduleName) + 1) * sizeof(TCHAR));
@@ -299,3 +258,4 @@ DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName)
 	ReadProcessMemory64(hProcess, p, &param, sizeof(param), NULL);
 	return param.result;
 }
+#endif
