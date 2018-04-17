@@ -7,7 +7,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 
 # Wiki
 
-- **Wow64**: Windows-on-Windows 64-bit, which 32-bit process works under
+- **Wow64**: Windows-on-Windows 64-bit, which 32-bit process works in.
 
 # Features
 
@@ -17,7 +17,9 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
     - wow64 injector -> x64 process @ x64 OS
     - x64 injector -> wow64 process @ x64 OS
     - x64 injector -> x64 process @ x64 OS
-- In-process X64Call for Wow64 process
+
+- In-process call x64 functions / APIs for Wow64 process
+
 - Local-like remote call of target process
     - Remote call multi-param (greater than 1) WINAPI of target process
     - Remote call WINAPI that return 64-bit result of target process
@@ -64,7 +66,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
         DWORD64 ret = RtlCreateUserThread(hProcess, NULL, FALSE, 0, 0, NULL, LdrUnloadDll, dllBaseAddr, NULL, NULL);
     ```
 
-    - Specified module is allowed (`ntdll.dll` as default)
+    - Available constructors: specified module is allowed (`ntdll.dll` as default)
     
     ```cpp
         X64Call(const char* funcName)
@@ -84,7 +86,8 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
         _tprintf(_T("Result: %d\n"), pid);
     ```
 
-    - Specified module or module name is allowed (`ntdll.dll` as default), **if failed to fetch x64 module, will automaticly fetch 32-bit modules in wow64 process under x64 OS**.
+    - Available constructors: specified module or module name is allowed (`ntdll.dll` as default).
+      - **If failed to fetch x64 module, will automaticly fetch 32-bit modules in wow64 process under x64 OS**.
 
     ```cpp
         YAPICall(HANDLE hProcess, const char* funcName)
@@ -108,13 +111,13 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 # Inside principle
 
 - Nomal x64->x64, x86->x86 injection:
-  - Use CreateRemoteThread/RtlCreateUserThread
+  - Use `CreateRemoteThread` / `RtlCreateUserThread`
   - You can change other methods by yourself.
   - FYR: [fdiskyou/injectAllTheThings](https://github.com/fdiskyou/injectAllTheThings)
 
 - Multi-param WINAPI:
   - Pack function address and params in one structure and use shell code to execute in remote process.
-  - See X86/X64Delegator_disassemble for details in [disassemble directory](https://github.com/ez8-co/yapi/tree/master/disassemble).
+  - See `X86/X64Delegator_disassemble` for details in [disassemble directory](https://github.com/ez8-co/yapi/tree/master/disassemble).
 
 - x64Call:
   - Switch to x64 mode
@@ -131,14 +134,14 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 
 # Compatibility
 
-    Operating systems that have been tested are shown in table below.
+- Operating systems that have been tested are shown in table below.
 
-    | Operating System       |   Notes                                                                             |
-    |------------------------|-------------------------------------------------------------------------------------|
-    | Windows 10            | Tested on 64-bit, should also work on 32-bit                                        |
-    | Windows 8              | Should work on both 64-bit and 32-bit                                        |
-    | Windows 7              | Should work on both 64-bit and 32-bit                                        |
-    | Windows XP             | Should work on both 64-bit and 32-bit                                        |
+    | Operating System      |   Notes  |
+    |-----------------------|----------|
+    | Windows 10            | Tested on 64-bit, should also work on 32-bit |
+    | Windows 8             | Should work on both 64-bit and 32-bit |
+    | Windows 7             | Should work on both 64-bit and 32-bit |
+    | Windows XP            | Should work on both 64-bit and 32-bit |
 
 # References
 
