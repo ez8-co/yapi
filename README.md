@@ -47,7 +47,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
 
     |  Class Name       |   x86 Support   | x64 Support         |
     |---------------|------------------------|---------------|
-    | X64Call           |  | :white_check_mark: |
+    | X64Call           | :white_check_mark: |  |
     | ProcessWriter    | :white_check_mark: | :white_check_mark: |
     | YAPICall     | :white_check_mark: | :white_check_mark: |
 
