@@ -16,7 +16,7 @@ using namespace yapi;
 DWORD64 WINAPI GetModuleHandleDw64(HANDLE hProcess, const TCHAR* moduleName);
 
 #if 1
-typedef DWORD (WINAPI* FUNC)(DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD);
+typedef DWORD (WINAPI* FUNC)(DWORD);
 struct Param1 {
 	FUNC func;
 	DWORD arg1;
@@ -31,11 +31,10 @@ struct Param1 {
 	DWORD arg10;
 };
 
-#if 0 //def _WIN64
+#if 1 //def _WIN64
 __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
 {
-	return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))
-		: (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))) : 0;
+	return param->func(param->arg1);
 }
 #else
 __declspec(noinline) DWORD Delegator(Param1* param)
@@ -92,7 +91,7 @@ int main()
 	PROCESSENTRY32 pe32 = { sizeof(pe32) };
 	if (Process32First(hSnapshot, &pe32)) {
 		do {
-			if (_tcsicmp(pe32.szExeFile, _T("qq.exe")))
+			if (_tcsicmp(pe32.szExeFile, _T("explorer.exe")))
 				continue;
 			HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pe32.th32ProcessID);
 

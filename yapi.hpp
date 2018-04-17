@@ -835,7 +835,6 @@ namespace yapi {
 			if(sc) return false;
 			const std::string& shellcode = _is64Bit ? shellCode<argCnt, 1>() : shellCode<argCnt, 0>();
 			sc = new ProcessWriter(_hProcess, shellcode.data(), shellcode.size() + 1, PAGE_EXECUTE_READWRITE);
-			sc->SetDontRelese();
 			return true;
 		}
 
@@ -846,11 +845,23 @@ namespace yapi {
 			HANDLE hThread = 0;
 			if (_is64Bit)
 				hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);
-			else
+			else {
+#ifdef _WIN64
+				static const unsigned char kTmpl_x64_to_x86[] = { 0x48, 0x89, 0x4c, 0x24, 0x08, 0x48, 0x83, 0xec, 0x28, 0x48, 0x8b, 0x44, 0x24, 0x30, 0x8b, 0x48, 
+																  0x08, 0x48, 0x8b, 0x44, 0x24, 0x30, 0x6a, 0x33, 0xe8, 0x00, 0x00, 0x00, 0x00, 0x83, 0x04, 0x24, 
+																  0x05, 0xcb, 0xff, 0xd0, 0xe8, 0x00, 0x00, 0x00, 0x00, 0xc7, 0x44, 0x24, 0x04, 0x23, 0x00, 0x00, 
+																  0x00, 0x83, 0x04, 0x24, 0x0d, 0xcb, 0x48, 0x83, 0xc4, 0x28, 0xc3 };
+				std::string x86_shellcode((char*)kTmpl_x64_to_x86, sizeof(kTmpl_x64_to_x86));
+				ProcessWriter* sc = new ProcessWriter(_hProcess, x86_shellcode.data(), x86_shellcode.size() + 1, PAGE_EXECUTE_READWRITE);
+				sc->SetDontRelese();
+				hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);
+#else
 				hThread = CreateRemoteThread32(_hProcess, NULL, 0, *_sc, p, 0, NULL);
-				// x64 call x86 TODO
+#endif
+			}
 			if (!hThread) return -1;
 			if (WaitForSingleObject(hThread, _dwTimeout) != WAIT_OBJECT_0) {
+				_sc->SetDontRelese();
 				CloseHandle(hThread);
 				return -1;
 			}
