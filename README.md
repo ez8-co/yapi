@@ -1,5 +1,5 @@
 # yapi -- Yet Another Process Injector
-A fusion library that reduce differences between x64, wow64 and x86 processes based on rewolf-wow64ext.
+A fusion library that reduce differences between x64, wow64 and x86 processes according to [Mr.Rewolf's article](http://blog.rewolf.pl/blog/?p=102).
 
 **Keywords: header-only, dll-free, any-callee, any-caller, any-win-os, local-like**
 
@@ -125,7 +125,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 
 - x64 call for wow64 process:
   - Switch to x64 mode
-  - See [References](#references) for details.
+  - See [references](#references) for details.
 
 - x64 process inject to wow64 process:
   - **Use trampoline:**
