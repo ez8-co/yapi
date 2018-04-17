@@ -21,7 +21,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 - In-process call x64 functions / APIs for Wow64 process
 
 - Local-like remote call of target process
-    - Remote call multi-param (greater than 1) WINAPI of target process
+    - Remote call multi-param (more than one) WINAPI of target process
     - Remote call WINAPI that return 64-bit result of target process
 
 # How to use
@@ -31,8 +31,8 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
     |  API Name       |   x86 Equivalent   | Notes         |
     |---------------|------------------------|---------------|
     | GetNtDll64           |                         |       |
-    | GetModuleHandle64    | GetModuleHandle         | 2 Params |
-    | GetProcAddress64     | GetProcAddress          | 3 Params |
+    | GetModuleHandle64    | GetModuleHandle         | 2 params overload version |
+    | GetProcAddress64     | GetProcAddress          | 3 params overload version |
     | SetLastError64       | SetLastError            |       |
     | VirtualQueryEx64     | VirtualQueryEx          |       |
     | VirtualAllocEx64     | VirtualAllocEx          |       |
@@ -154,7 +154,7 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ba
 
 # Roadmap
 
-- Shell codes that greater than 6 arguments for `YAPICall`.
+- Finish shell codes that more than 6 arguments for `YAPICall`.
 - Support to fetch specified bit module for `YAPICall` (32-bit or 64-bit).
 
 # Misc
