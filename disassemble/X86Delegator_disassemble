@@ -1,0 +1,410 @@
+0 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00802A10 55                   push        ebp  
+00802A11 8B EC                mov         ebp,esp  
+00802A13 51                   push        ecx  
+    43:     return param ? param->func() : 0;
+00802A14 83 7D 08 00          cmp         dword ptr [param],0  
+00802A18 74 0C                je          Delegator+16h (0802A26h)  
+00802A1A 8B 45 08             mov         eax,dword ptr [param]  
+00802A1D 8B 08                mov         ecx,dword ptr [eax]  
+00802A1F FF D1                call        ecx  
+00802A21 89 45 FC             mov         dword ptr [ebp-4],eax  
+00802A24 EB 07                jmp         Delegator+1Dh (0802A2Dh)  
+00802A26 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00802A2D 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00802A30 8B E5                mov         esp,ebp  
+00802A32 5D                   pop         ebp  
+00802A33 C3                   ret  
+
+1 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+002F2A10 55                   push        ebp  
+002F2A11 8B EC                mov         ebp,esp  
+002F2A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1) : 0;
+002F2A14 83 7D 08 00          cmp         dword ptr [param],0  
+002F2A18 74 13                je          Delegator+1Dh (02F2A2Dh)  
+002F2A1A 8B 45 08             mov         eax,dword ptr [param]  
+002F2A1D 8B 48 04             mov         ecx,dword ptr [eax+4]  
+002F2A20 51                   push        ecx  
+002F2A21 8B 55 08             mov         edx,dword ptr [param]  
+002F2A24 8B 02                mov         eax,dword ptr [edx]  
+002F2A26 FF D0                call        eax  
+002F2A28 89 45 FC             mov         dword ptr [ebp-4],eax  
+002F2A2B EB 07                jmp         Delegator+24h (02F2A34h)  
+002F2A2D C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+002F2A34 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+002F2A37 8B E5                mov         esp,ebp  
+002F2A39 5D                   pop         ebp  
+002F2A3A C3                   ret  
+
+2 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00B02A10 55                   push        ebp  
+00B02A11 8B EC                mov         ebp,esp  
+00B02A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2) : 0;
+00B02A14 83 7D 08 00          cmp         dword ptr [param],0  
+00B02A18 74 1A                je          Delegator+24h (0B02A34h)  
+00B02A1A 8B 45 08             mov         eax,dword ptr [param]  
+00B02A1D 8B 48 08             mov         ecx,dword ptr [eax+8]  
+00B02A20 51                   push        ecx  
+00B02A21 8B 55 08             mov         edx,dword ptr [param]  
+00B02A24 8B 42 04             mov         eax,dword ptr [edx+4]  
+00B02A27 50                   push        eax  
+00B02A28 8B 4D 08             mov         ecx,dword ptr [param]  
+00B02A2B 8B 11                mov         edx,dword ptr [ecx]  
+00B02A2D FF D2                call        edx  
+00B02A2F 89 45 FC             mov         dword ptr [ebp-4],eax  
+00B02A32 EB 07                jmp         Delegator+2Bh (0B02A3Bh)  
+00B02A34 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00B02A3B 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00B02A3E 8B E5                mov         esp,ebp  
+    44: }
+00B02A40 5D                   pop         ebp  
+00B02A41 C3                   ret  
+
+
+3 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+01352A10 55                   push        ebp  
+01352A11 8B EC                mov         ebp,esp  
+01352A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3) : 0;
+01352A14 83 7D 08 00          cmp         dword ptr [param],0  
+01352A18 74 21                je          Delegator+2Bh (01352A3Bh)  
+01352A1A 8B 45 08             mov         eax,dword ptr [param]  
+01352A1D 8B 48 0C             mov         ecx,dword ptr [eax+0Ch]  
+01352A20 51                   push        ecx  
+01352A21 8B 55 08             mov         edx,dword ptr [param]  
+01352A24 8B 42 08             mov         eax,dword ptr [edx+8]  
+01352A27 50                   push        eax  
+01352A28 8B 4D 08             mov         ecx,dword ptr [param]  
+01352A2B 8B 51 04             mov         edx,dword ptr [ecx+4]  
+01352A2E 52                   push        edx  
+01352A2F 8B 45 08             mov         eax,dword ptr [param]  
+01352A32 8B 08                mov         ecx,dword ptr [eax]  
+01352A34 FF D1                call        ecx  
+01352A36 89 45 FC             mov         dword ptr [ebp-4],eax  
+01352A39 EB 07                jmp         Delegator+32h (01352A42h)  
+01352A3B C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+01352A42 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+01352A45 8B E5                mov         esp,ebp  
+01352A47 5D                   pop         ebp  
+01352A48 C3                   ret  
+
+4 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00152A10 55                   push        ebp  
+00152A11 8B EC                mov         ebp,esp  
+00152A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4) : 0;
+00152A14 83 7D 08 00          cmp         dword ptr [param],0  
+00152A18 74 28                je          Delegator+32h (0152A42h)  
+00152A1A 8B 45 08             mov         eax,dword ptr [param]  
+00152A1D 8B 48 10             mov         ecx,dword ptr [eax+10h]  
+00152A20 51                   push        ecx  
+00152A21 8B 55 08             mov         edx,dword ptr [param]  
+00152A24 8B 42 0C             mov         eax,dword ptr [edx+0Ch]  
+00152A27 50                   push        eax  
+00152A28 8B 4D 08             mov         ecx,dword ptr [param]  
+00152A2B 8B 51 08             mov         edx,dword ptr [ecx+8]  
+00152A2E 52                   push        edx  
+00152A2F 8B 45 08             mov         eax,dword ptr [param]  
+00152A32 8B 48 04             mov         ecx,dword ptr [eax+4]  
+00152A35 51                   push        ecx  
+00152A36 8B 55 08             mov         edx,dword ptr [param]  
+00152A39 8B 02                mov         eax,dword ptr [edx]  
+00152A3B FF D0                call        eax  
+00152A3D 89 45 FC             mov         dword ptr [ebp-4],eax  
+00152A40 EB 07                jmp         Delegator+39h (0152A49h)  
+00152A42 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00152A49 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00152A4C 8B E5                mov         esp,ebp  
+00152A4E 5D                   pop         ebp  
+00152A4F C3                   ret  
+
+5 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00DB2A10 55                   push        ebp  
+00DB2A11 8B EC                mov         ebp,esp  
+00DB2A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5) : 0;
+00DB2A14 83 7D 08 00          cmp         dword ptr [param],0  
+00DB2A18 74 2F                je          Delegator+39h (0DB2A49h)  
+00DB2A1A 8B 45 08             mov         eax,dword ptr [param]  
+00DB2A1D 8B 48 14             mov         ecx,dword ptr [eax+14h]  
+00DB2A20 51                   push        ecx  
+00DB2A21 8B 55 08             mov         edx,dword ptr [param]  
+00DB2A24 8B 42 10             mov         eax,dword ptr [edx+10h]  
+00DB2A27 50                   push        eax  
+00DB2A28 8B 4D 08             mov         ecx,dword ptr [param]  
+00DB2A2B 8B 51 0C             mov         edx,dword ptr [ecx+0Ch]  
+00DB2A2E 52                   push        edx  
+00DB2A2F 8B 45 08             mov         eax,dword ptr [param]  
+00DB2A32 8B 48 08             mov         ecx,dword ptr [eax+8]  
+00DB2A35 51                   push        ecx  
+00DB2A36 8B 55 08             mov         edx,dword ptr [param]  
+00DB2A39 8B 42 04             mov         eax,dword ptr [edx+4]  
+00DB2A3C 50                   push        eax  
+00DB2A3D 8B 4D 08             mov         ecx,dword ptr [param]  
+00DB2A40 8B 11                mov         edx,dword ptr [ecx]  
+00DB2A42 FF D2                call        edx  
+00DB2A44 89 45 FC             mov         dword ptr [ebp-4],eax  
+00DB2A47 EB 07                jmp         Delegator+40h (0DB2A50h)  
+00DB2A49 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00DB2A50 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00DB2A53 8B E5                mov         esp,ebp  
+00DB2A55 5D                   pop         ebp  
+00DB2A56 C3                   ret  
+
+6 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00142A10 55                   push        ebp  
+00142A11 8B EC                mov         ebp,esp  
+00142A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6) : 0;
+00142A14 83 7D 08 00          cmp         dword ptr [param],0  
+00142A18 74 36                je          Delegator+40h (0142A50h)  
+00142A1A 8B 45 08             mov         eax,dword ptr [param]  
+00142A1D 8B 48 18             mov         ecx,dword ptr [eax+18h]  
+00142A20 51                   push        ecx  
+00142A21 8B 55 08             mov         edx,dword ptr [param]  
+00142A24 8B 42 14             mov         eax,dword ptr [edx+14h]  
+00142A27 50                   push        eax  
+00142A28 8B 4D 08             mov         ecx,dword ptr [param]  
+00142A2B 8B 51 10             mov         edx,dword ptr [ecx+10h]  
+00142A2E 52                   push        edx  
+00142A2F 8B 45 08             mov         eax,dword ptr [param]  
+00142A32 8B 48 0C             mov         ecx,dword ptr [eax+0Ch]  
+00142A35 51                   push        ecx  
+00142A36 8B 55 08             mov         edx,dword ptr [param]  
+00142A39 8B 42 08             mov         eax,dword ptr [edx+8]  
+00142A3C 50                   push        eax  
+00142A3D 8B 4D 08             mov         ecx,dword ptr [param]  
+00142A40 8B 51 04             mov         edx,dword ptr [ecx+4]  
+00142A43 52                   push        edx  
+00142A44 8B 45 08             mov         eax,dword ptr [param]  
+00142A47 8B 08                mov         ecx,dword ptr [eax]  
+00142A49 FF D1                call        ecx  
+00142A4B 89 45 FC             mov         dword ptr [ebp-4],eax  
+00142A4E EB 07                jmp         Delegator+47h (0142A57h)  
+00142A50 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00142A57 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00142A5A 8B E5                mov         esp,ebp  
+00142A5C 5D                   pop         ebp  
+00142A5D C3                   ret  
+
+7 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00232A10 55                   push        ebp  
+00232A11 8B EC                mov         ebp,esp  
+00232A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7) : 0;
+00232A14 83 7D 08 00          cmp         dword ptr [param],0  
+00232A18 74 3D                je          Delegator+47h (0232A57h)  
+00232A1A 8B 45 08             mov         eax,dword ptr [param]  
+00232A1D 8B 48 1C             mov         ecx,dword ptr [eax+1Ch]  
+00232A20 51                   push        ecx  
+00232A21 8B 55 08             mov         edx,dword ptr [param]  
+00232A24 8B 42 18             mov         eax,dword ptr [edx+18h]  
+00232A27 50                   push        eax  
+00232A28 8B 4D 08             mov         ecx,dword ptr [param]  
+00232A2B 8B 51 14             mov         edx,dword ptr [ecx+14h]  
+00232A2E 52                   push        edx  
+00232A2F 8B 45 08             mov         eax,dword ptr [param]  
+00232A32 8B 48 10             mov         ecx,dword ptr [eax+10h]  
+00232A35 51                   push        ecx  
+00232A36 8B 55 08             mov         edx,dword ptr [param]  
+00232A39 8B 42 0C             mov         eax,dword ptr [edx+0Ch]  
+00232A3C 50                   push        eax  
+00232A3D 8B 4D 08             mov         ecx,dword ptr [param]  
+00232A40 8B 51 08             mov         edx,dword ptr [ecx+8]  
+00232A43 52                   push        edx  
+00232A44 8B 45 08             mov         eax,dword ptr [param]  
+00232A47 8B 48 04             mov         ecx,dword ptr [eax+4]  
+00232A4A 51                   push        ecx  
+00232A4B 8B 55 08             mov         edx,dword ptr [param]  
+00232A4E 8B 02                mov         eax,dword ptr [edx]  
+00232A50 FF D0                call        eax  
+00232A52 89 45 FC             mov         dword ptr [ebp-4],eax  
+00232A55 EB 07                jmp         Delegator+4Eh (0232A5Eh)  
+00232A57 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00232A5E 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00232A61 8B E5                mov         esp,ebp  
+00232A63 5D                   pop         ebp  
+00232A64 C3                   ret  
+
+8 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00352A10 55                   push        ebp  
+00352A11 8B EC                mov         ebp,esp  
+00352A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8) : 0;
+00352A14 83 7D 08 00          cmp         dword ptr [param],0  
+00352A18 74 44                je          Delegator+4Eh (0352A5Eh)  
+00352A1A 8B 45 08             mov         eax,dword ptr [param]  
+00352A1D 8B 48 20             mov         ecx,dword ptr [eax+20h]  
+00352A20 51                   push        ecx  
+00352A21 8B 55 08             mov         edx,dword ptr [param]  
+00352A24 8B 42 1C             mov         eax,dword ptr [edx+1Ch]  
+00352A27 50                   push        eax  
+00352A28 8B 4D 08             mov         ecx,dword ptr [param]  
+00352A2B 8B 51 18             mov         edx,dword ptr [ecx+18h]  
+00352A2E 52                   push        edx  
+00352A2F 8B 45 08             mov         eax,dword ptr [param]  
+00352A32 8B 48 14             mov         ecx,dword ptr [eax+14h]  
+00352A35 51                   push        ecx  
+00352A36 8B 55 08             mov         edx,dword ptr [param]  
+00352A39 8B 42 10             mov         eax,dword ptr [edx+10h]  
+00352A3C 50                   push        eax  
+00352A3D 8B 4D 08             mov         ecx,dword ptr [param]  
+00352A40 8B 51 0C             mov         edx,dword ptr [ecx+0Ch]  
+00352A43 52                   push        edx  
+00352A44 8B 45 08             mov         eax,dword ptr [param]  
+00352A47 8B 48 08             mov         ecx,dword ptr [eax+8]  
+00352A4A 51                   push        ecx  
+00352A4B 8B 55 08             mov         edx,dword ptr [param]  
+00352A4E 8B 42 04             mov         eax,dword ptr [edx+4]  
+00352A51 50                   push        eax  
+00352A52 8B 4D 08             mov         ecx,dword ptr [param]  
+00352A55 8B 11                mov         edx,dword ptr [ecx]  
+00352A57 FF D2                call        edx  
+00352A59 89 45 FC             mov         dword ptr [ebp-4],eax  
+00352A5C EB 07                jmp         Delegator+55h (0352A65h)  
+00352A5E C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00352A65 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00352A68 8B E5                mov         esp,ebp  
+00352A6A 5D                   pop         ebp  
+00352A6B C3                   ret  
+
+9 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+00072A10 55                   push        ebp  
+00072A11 8B EC                mov         ebp,esp  
+00072A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9) : 0;
+00072A14 83 7D 08 00          cmp         dword ptr [param],0  
+00072A18 74 4B                je          Delegator+55h (072A65h)  
+00072A1A 8B 45 08             mov         eax,dword ptr [param]  
+00072A1D 8B 48 24             mov         ecx,dword ptr [eax+24h]  
+00072A20 51                   push        ecx  
+00072A21 8B 55 08             mov         edx,dword ptr [param]  
+00072A24 8B 42 20             mov         eax,dword ptr [edx+20h]  
+00072A27 50                   push        eax  
+00072A28 8B 4D 08             mov         ecx,dword ptr [param]  
+00072A2B 8B 51 1C             mov         edx,dword ptr [ecx+1Ch]  
+00072A2E 52                   push        edx  
+00072A2F 8B 45 08             mov         eax,dword ptr [param]  
+00072A32 8B 48 18             mov         ecx,dword ptr [eax+18h]  
+00072A35 51                   push        ecx  
+00072A36 8B 55 08             mov         edx,dword ptr [param]  
+00072A39 8B 42 14             mov         eax,dword ptr [edx+14h]  
+00072A3C 50                   push        eax  
+00072A3D 8B 4D 08             mov         ecx,dword ptr [param]  
+00072A40 8B 51 10             mov         edx,dword ptr [ecx+10h]  
+00072A43 52                   push        edx  
+00072A44 8B 45 08             mov         eax,dword ptr [param]  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9) : 0;
+00072A47 8B 48 0C             mov         ecx,dword ptr [eax+0Ch]  
+00072A4A 51                   push        ecx  
+00072A4B 8B 55 08             mov         edx,dword ptr [param]  
+00072A4E 8B 42 08             mov         eax,dword ptr [edx+8]  
+00072A51 50                   push        eax  
+00072A52 8B 4D 08             mov         ecx,dword ptr [param]  
+00072A55 8B 51 04             mov         edx,dword ptr [ecx+4]  
+00072A58 52                   push        edx  
+00072A59 8B 45 08             mov         eax,dword ptr [param]  
+00072A5C 8B 08                mov         ecx,dword ptr [eax]  
+00072A5E FF D1                call        ecx  
+00072A60 89 45 FC             mov         dword ptr [ebp-4],eax  
+00072A63 EB 07                jmp         Delegator+5Ch (072A6Ch)  
+00072A65 C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+00072A6C 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+00072A6F 8B E5                mov         esp,ebp  
+00072A71 5D                   pop         ebp  
+00072A72 C3                   ret  
+
+10 arg
+
+    41: __declspec(noinline) DWORD Delegator(Param1* param)
+    42: {
+000F2A10 55                   push        ebp  
+000F2A11 8B EC                mov         ebp,esp  
+000F2A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10) : 0;
+000F2A14 83 7D 08 00          cmp         dword ptr [param],0  
+000F2A18 74 52                je          Delegator+5Ch (0F2A6Ch)  
+000F2A1A 8B 45 08             mov         eax,dword ptr [param]  
+000F2A1D 8B 48 28             mov         ecx,dword ptr [eax+28h]  
+000F2A20 51                   push        ecx  
+000F2A21 8B 55 08             mov         edx,dword ptr [param]  
+000F2A24 8B 42 24             mov         eax,dword ptr [edx+24h]  
+000F2A27 50                   push        eax  
+000F2A28 8B 4D 08             mov         ecx,dword ptr [param]  
+000F2A2B 8B 51 20             mov         edx,dword ptr [ecx+20h]  
+000F2A2E 52                   push        edx  
+000F2A2F 8B 45 08             mov         eax,dword ptr [param]  
+000F2A32 8B 48 1C             mov         ecx,dword ptr [eax+1Ch]  
+000F2A35 51                   push        ecx  
+000F2A36 8B 55 08             mov         edx,dword ptr [param]  
+000F2A39 8B 42 18             mov         eax,dword ptr [edx+18h]  
+000F2A3C 50                   push        eax  
+000F2A3D 8B 4D 08             mov         ecx,dword ptr [param]  
+000F2A40 8B 51 14             mov         edx,dword ptr [ecx+14h]  
+000F2A43 52                   push        edx  
+000F2A44 8B 45 08             mov         eax,dword ptr [param]  
+    43:     return param ? param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10) : 0;
+000F2A47 8B 48 10             mov         ecx,dword ptr [eax+10h]  
+000F2A4A 51                   push        ecx  
+000F2A4B 8B 55 08             mov         edx,dword ptr [param]  
+000F2A4E 8B 42 0C             mov         eax,dword ptr [edx+0Ch]  
+000F2A51 50                   push        eax  
+000F2A52 8B 4D 08             mov         ecx,dword ptr [param]  
+000F2A55 8B 51 08             mov         edx,dword ptr [ecx+8]  
+000F2A58 52                   push        edx  
+000F2A59 8B 45 08             mov         eax,dword ptr [param]  
+000F2A5C 8B 48 04             mov         ecx,dword ptr [eax+4]  
+000F2A5F 51                   push        ecx  
+000F2A60 8B 55 08             mov         edx,dword ptr [param]  
+000F2A63 8B 02                mov         eax,dword ptr [edx]  
+000F2A65 FF D0                call        eax  
+000F2A67 89 45 FC             mov         dword ptr [ebp-4],eax  
+000F2A6A EB 07                jmp         Delegator+63h (0F2A73h)  
+000F2A6C C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+000F2A73 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+000F2A76 8B E5                mov         esp,ebp  
+000F2A78 5D                   pop         ebp  
+000F2A79 C3                   ret  

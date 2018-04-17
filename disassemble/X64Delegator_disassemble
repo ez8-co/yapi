@@ -1,0 +1,455 @@
+0 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF75E922750 40 53                push        rbx  
+00007FF75E922752 48 83 EC 20          sub         rsp,20h  
+00007FF75E922756 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func())
+00007FF75E922759 48 85 C9             test        rcx,rcx  
+00007FF75E92275C 74 1D                je          Delegator+2Bh (07FF75E92277Bh)  
+00007FF75E92275E 48 83 39 00          cmp         qword ptr [rcx],0  
+00007FF75E922762 48 8B 41 08          mov         rax,qword ptr [rcx+8]  
+00007FF75E922766 74 0B                je          Delegator+23h (07FF75E922773h)  
+00007FF75E922768 FF D0                call        rax  
+00007FF75E92276A 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func())) : 0;
+   108: }
+00007FF75E92276D 48 83 C4 20          add         rsp,20h  
+00007FF75E922771 5B                   pop         rbx  
+00007FF75E922772 C3                   ret  
+00007FF75E922773 48 83 C4 20          add         rsp,20h  
+00007FF75E922777 5B                   pop         rbx  
+   106:     return param ? (param->ret ? (param->ret = param->func())
+00007FF75E922778 48 FF E0             jmp         rax  
+00007FF75E92277B 33 C0                xor         eax,eax  
+   107:         : (param->func())) : 0;
+   108: }
+00007FF75E92277D 48 83 C4 20          add         rsp,20h  
+00007FF75E922781 5B                   pop         rbx  
+00007FF75E922782 C3                   ret
+
+1 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF717592750 40 53                push        rbx  
+00007FF717592752 48 83 EC 20          sub         rsp,20h  
+00007FF717592756 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1))
+00007FF717592759 48 85 C9             test        rcx,rcx  
+00007FF71759275C 74 21                je          Delegator+2Fh (07FF71759277Fh)  
+00007FF71759275E 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF717592762 48 8B 41 08          mov         rax,qword ptr [rcx+8]  
+00007FF717592766 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF71759276A 74 0B                je          Delegator+27h (07FF717592777h)  
+00007FF71759276C FF D0                call        rax  
+00007FF71759276E 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1))) : 0;
+   108: }
+00007FF717592771 48 83 C4 20          add         rsp,20h  
+00007FF717592775 5B                   pop         rbx  
+00007FF717592776 C3                   ret  
+00007FF717592777 48 83 C4 20          add         rsp,20h  
+00007FF71759277B 5B                   pop         rbx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1))
+00007FF71759277C 48 FF E0             jmp         rax  
+00007FF71759277F 33 C0                xor         eax,eax  
+   107:         : (param->func(param->arg1))) : 0;
+   108: }
+00007FF717592781 48 83 C4 20          add         rsp,20h  
+00007FF717592785 5B                   pop         rbx  
+00007FF717592786 C3                   ret
+
+2 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF66CCA2750 40 53                push        rbx  
+00007FF66CCA2752 48 83 EC 20          sub         rsp,20h  
+00007FF66CCA2756 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2))
+00007FF66CCA2759 48 85 C9             test        rcx,rcx  
+00007FF66CCA275C 74 25                je          Delegator+33h (07FF66CCA2783h)  
+00007FF66CCA275E 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF66CCA2762 48 8B 41 08          mov         rax,qword ptr [rcx+8]  
+00007FF66CCA2766 48 8B 51 18          mov         rdx,qword ptr [rcx+18h]  
+00007FF66CCA276A 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF66CCA276E 74 0B                je          Delegator+2Bh (07FF66CCA277Bh)  
+00007FF66CCA2770 FF D0                call        rax  
+00007FF66CCA2772 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1, param->arg2))) : 0;
+   108: }
+00007FF66CCA2775 48 83 C4 20          add         rsp,20h  
+00007FF66CCA2779 5B                   pop         rbx  
+00007FF66CCA277A C3                   ret  
+00007FF66CCA277B 48 83 C4 20          add         rsp,20h  
+00007FF66CCA277F 5B                   pop         rbx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2))
+00007FF66CCA2780 48 FF E0             jmp         rax  
+00007FF66CCA2783 33 C0                xor         eax,eax  
+   107:         : (param->func(param->arg1, param->arg2))) : 0;
+   108: }
+00007FF66CCA2785 48 83 C4 20          add         rsp,20h  
+   107:         : (param->func(param->arg1, param->arg2))) : 0;
+   108: }
+00007FF66CCA2789 5B                   pop         rbx  
+00007FF66CCA278A C3                   ret 
+
+3 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF658E62750 40 53                push        rbx  
+00007FF658E62752 48 83 EC 20          sub         rsp,20h  
+00007FF658E62756 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3))
+00007FF658E62759 48 85 C9             test        rcx,rcx  
+00007FF658E6275C 74 29                je          Delegator+37h (07FF658E62787h)  
+00007FF658E6275E 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF658E62762 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF658E62766 48 8B 43 08          mov         rax,qword ptr [rbx+8]  
+00007FF658E6276A 4C 8B 43 20          mov         r8,qword ptr [rbx+20h]  
+00007FF658E6276E 48 8B 53 18          mov         rdx,qword ptr [rbx+18h]  
+00007FF658E62772 74 0B                je          Delegator+2Fh (07FF658E6277Fh)  
+00007FF658E62774 FF D0                call        rax  
+00007FF658E62776 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3))) : 0;
+   108: }
+00007FF658E62779 48 83 C4 20          add         rsp,20h  
+00007FF658E6277D 5B                   pop         rbx  
+00007FF658E6277E C3                   ret  
+00007FF658E6277F 48 83 C4 20          add         rsp,20h  
+00007FF658E62783 5B                   pop         rbx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3))
+00007FF658E62784 48 FF E0             jmp         rax  
+00007FF658E62787 33 C0                xor         eax,eax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3))) : 0;
+   108: }
+00007FF658E62789 48 83 C4 20          add         rsp,20h  
+00007FF658E6278D 5B                   pop         rbx  
+00007FF658E6278E C3                   ret  
+
+4 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF733F328D0 40 53                push        rbx  
+00007FF733F328D2 48 83 EC 20          sub         rsp,20h  
+00007FF733F328D6 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4))
+00007FF733F328D9 48 85 C9             test        rcx,rcx  
+00007FF733F328DC 74 2D                je          Delegator+3Bh (07FF733F3290Bh)  
+00007FF733F328DE 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF733F328E2 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF733F328E6 48 8B 43 08          mov         rax,qword ptr [rbx+8]  
+00007FF733F328EA 4C 8B 4B 28          mov         r9,qword ptr [rbx+28h]  
+00007FF733F328EE 4C 8B 43 20          mov         r8,qword ptr [rbx+20h]  
+00007FF733F328F2 48 8B 53 18          mov         rdx,qword ptr [rbx+18h]  
+00007FF733F328F6 74 0B                je          Delegator+33h (07FF733F32903h)  
+00007FF733F328F8 FF D0                call        rax  
+00007FF733F328FA 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4))) : 0;
+   108: }
+00007FF733F328FD 48 83 C4 20          add         rsp,20h  
+00007FF733F32901 5B                   pop         rbx  
+00007FF733F32902 C3                   ret  
+00007FF733F32903 48 83 C4 20          add         rsp,20h  
+00007FF733F32907 5B                   pop         rbx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4))
+00007FF733F32908 48 FF E0             jmp         rax  
+00007FF733F3290B 33 C0                xor         eax,eax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4))) : 0;
+   108: }
+00007FF733F3290D 48 83 C4 20          add         rsp,20h  
+00007FF733F32911 5B                   pop         rbx  
+00007FF733F32912 C3                   ret  
+
+5 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF66C2128D0 40 53                push        rbx  
+00007FF66C2128D2 48 83 EC 30          sub         rsp,30h  
+00007FF66C2128D6 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5))
+00007FF66C2128D9 48 85 C9             test        rcx,rcx  
+00007FF66C2128DC 74 36                je          Delegator+44h (07FF66C212914h)  
+00007FF66C2128DE 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF66C2128E2 4C 8B 53 30          mov         r10,qword ptr [rbx+30h]  
+00007FF66C2128E6 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF66C2128EA 48 8B 43 08          mov         rax,qword ptr [rbx+8]  
+00007FF66C2128EE 4C 8B 4B 28          mov         r9,qword ptr [rbx+28h]  
+00007FF66C2128F2 4C 8B 43 20          mov         r8,qword ptr [rbx+20h]  
+00007FF66C2128F6 48 8B 53 18          mov         rdx,qword ptr [rbx+18h]  
+00007FF66C2128FA 4C 89 54 24 20       mov         qword ptr [rsp+20h],r10  
+00007FF66C2128FF 74 0B                je          Delegator+3Ch (07FF66C21290Ch)  
+00007FF66C212901 FF D0                call        rax  
+00007FF66C212903 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5))) : 0;
+   108: }
+00007FF66C212906 48 83 C4 30          add         rsp,30h  
+00007FF66C21290A 5B                   pop         rbx  
+00007FF66C21290B C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5))
+00007FF66C21290C FF D0                call        rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5))) : 0;
+   108: }
+00007FF66C21290E 48 83 C4 30          add         rsp,30h  
+00007FF66C212912 5B                   pop         rbx  
+00007FF66C212913 C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5))
+00007FF66C212914 33 C0                xor         eax,eax  
+00007FF66C212916 48 83 C4 30          add         rsp,30h  
+00007FF66C21291A 5B                   pop         rbx  
+00007FF66C21291B C3                   ret  
+
+6 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF72BE328D0 40 53                push        rbx  
+00007FF72BE328D2 48 83 EC 30          sub         rsp,30h  
+00007FF72BE328D6 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6))
+00007FF72BE328D9 48 85 C9             test        rcx,rcx  
+00007FF72BE328DC 74 3F                je          Delegator+4Dh (07FF72BE3291Dh)  
+00007FF72BE328DE 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF72BE328E2 4C 8B 53 38          mov         r10,qword ptr [rbx+38h]  
+00007FF72BE328E6 4C 8B 5B 30          mov         r11,qword ptr [rbx+30h]  
+00007FF72BE328EA 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF72BE328EE 48 8B 43 08          mov         rax,qword ptr [rbx+8]  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6))
+00007FF72BE328F2 4C 8B 4B 28          mov         r9,qword ptr [rbx+28h]  
+00007FF72BE328F6 4C 8B 43 20          mov         r8,qword ptr [rbx+20h]  
+00007FF72BE328FA 48 8B 53 18          mov         rdx,qword ptr [rbx+18h]  
+00007FF72BE328FE 4C 89 54 24 28       mov         qword ptr [rsp+28h],r10  
+00007FF72BE32903 4C 89 5C 24 20       mov         qword ptr [rsp+20h],r11  
+00007FF72BE32908 74 0B                je          Delegator+45h (07FF72BE32915h)  
+00007FF72BE3290A FF D0                call        rax  
+00007FF72BE3290C 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6))) : 0;
+   108: }
+00007FF72BE3290F 48 83 C4 30          add         rsp,30h  
+00007FF72BE32913 5B                   pop         rbx  
+00007FF72BE32914 C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6))
+00007FF72BE32915 FF D0                call        rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6))) : 0;
+   108: }
+00007FF72BE32917 48 83 C4 30          add         rsp,30h  
+00007FF72BE3291B 5B                   pop         rbx  
+00007FF72BE3291C C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6))
+00007FF72BE3291D 33 C0                xor         eax,eax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6))) : 0;
+   108: }
+00007FF72BE3291F 48 83 C4 30          add         rsp,30h  
+00007FF72BE32923 5B                   pop         rbx  
+00007FF72BE32924 C3                   ret  
+
+7 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF6EB732AE0 40 53                push        rbx  
+00007FF6EB732AE2 48 83 EC 40          sub         rsp,40h  
+00007FF6EB732AE6 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7))
+00007FF6EB732AE9 48 85 C9             test        rcx,rcx  
+00007FF6EB732AEC 74 57                je          Delegator+65h (07FF6EB732B45h)  
+00007FF6EB732AEE 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF6EB732AF2 4C 8B 51 40          mov         r10,qword ptr [rcx+40h]  
+00007FF6EB732AF6 4C 8B 59 38          mov         r11,qword ptr [rcx+38h]  
+00007FF6EB732AFA 48 8B 51 18          mov         rdx,qword ptr [rcx+18h]  
+00007FF6EB732AFE 48 8B 41 08          mov         rax,qword ptr [rcx+8]  
+00007FF6EB732B02 4C 8B 49 28          mov         r9,qword ptr [rcx+28h]  
+00007FF6EB732B06 4C 8B 41 20          mov         r8,qword ptr [rcx+20h]  
+00007FF6EB732B0A 4C 89 54 24 30       mov         qword ptr [rsp+30h],r10  
+00007FF6EB732B0F 48 89 7C 24 50       mov         qword ptr [rsp+50h],rdi  
+00007FF6EB732B14 48 8B 79 30          mov         rdi,qword ptr [rcx+30h]  
+00007FF6EB732B18 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF6EB732B1C 4C 89 5C 24 28       mov         qword ptr [rsp+28h],r11  
+00007FF6EB732B21 48 89 7C 24 20       mov         qword ptr [rsp+20h],rdi  
+00007FF6EB732B26 74 10                je          Delegator+58h (07FF6EB732B38h)  
+00007FF6EB732B28 FF D0                call        rax  
+00007FF6EB732B2A 48 8B 7C 24 50       mov         rdi,qword ptr [rsp+50h]  
+00007FF6EB732B2F 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7))) : 0;
+   108: }
+00007FF6EB732B32 48 83 C4 40          add         rsp,40h  
+00007FF6EB732B36 5B                   pop         rbx  
+00007FF6EB732B37 C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7))
+00007FF6EB732B38 FF D0                call        rax  
+00007FF6EB732B3A 48 8B 7C 24 50       mov         rdi,qword ptr [rsp+50h]  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7))) : 0;
+   108: }
+00007FF6EB732B3F 48 83 C4 40          add         rsp,40h  
+00007FF6EB732B43 5B                   pop         rbx  
+00007FF6EB732B44 C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7))
+00007FF6EB732B45 33 C0                xor         eax,eax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7))) : 0;
+   108: }
+00007FF6EB732B47 48 83 C4 40          add         rsp,40h  
+00007FF6EB732B4B 5B                   pop         rbx  
+00007FF6EB732B4C C3                   ret  
+
+8 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF7D0B82AE0 40 53                push        rbx  
+00007FF7D0B82AE2 48 83 EC 40          sub         rsp,40h  
+00007FF7D0B82AE6 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8))
+00007FF7D0B82AE9 48 85 C9             test        rcx,rcx  
+00007FF7D0B82AEC 74 6F                je          Delegator+7Dh (07FF7D0B82B5Dh)  
+00007FF7D0B82AEE 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF7D0B82AF2 4C 8B 51 48          mov         r10,qword ptr [rcx+48h]  
+00007FF7D0B82AF6 4C 8B 59 40          mov         r11,qword ptr [rcx+40h]  
+00007FF7D0B82AFA 48 8B 51 18          mov         rdx,qword ptr [rcx+18h]  
+00007FF7D0B82AFE 48 8B 41 08          mov         rax,qword ptr [rcx+8]  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8))
+00007FF7D0B82B02 4C 8B 49 28          mov         r9,qword ptr [rcx+28h]  
+00007FF7D0B82B06 4C 8B 41 20          mov         r8,qword ptr [rcx+20h]  
+00007FF7D0B82B0A 4C 89 54 24 38       mov         qword ptr [rsp+38h],r10  
+00007FF7D0B82B0F 48 89 74 24 50       mov         qword ptr [rsp+50h],rsi  
+00007FF7D0B82B14 48 8B 71 30          mov         rsi,qword ptr [rcx+30h]  
+00007FF7D0B82B18 4C 89 5C 24 30       mov         qword ptr [rsp+30h],r11  
+00007FF7D0B82B1D 48 89 7C 24 58       mov         qword ptr [rsp+58h],rdi  
+00007FF7D0B82B22 48 8B 79 38          mov         rdi,qword ptr [rcx+38h]  
+00007FF7D0B82B26 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF7D0B82B2A 48 89 7C 24 28       mov         qword ptr [rsp+28h],rdi  
+00007FF7D0B82B2F 48 89 74 24 20       mov         qword ptr [rsp+20h],rsi  
+00007FF7D0B82B34 74 15                je          Delegator+6Bh (07FF7D0B82B4Bh)  
+00007FF7D0B82B36 FF D0                call        rax  
+00007FF7D0B82B38 48 8B 74 24 50       mov         rsi,qword ptr [rsp+50h]  
+00007FF7D0B82B3D 48 8B 7C 24 58       mov         rdi,qword ptr [rsp+58h]  
+00007FF7D0B82B42 48 89 03             mov         qword ptr [rbx],rax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8))) : 0;
+   108: }
+00007FF7D0B82B45 48 83 C4 40          add         rsp,40h  
+00007FF7D0B82B49 5B                   pop         rbx  
+00007FF7D0B82B4A C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8))
+00007FF7D0B82B4B FF D0                call        rax  
+00007FF7D0B82B4D 48 8B 74 24 50       mov         rsi,qword ptr [rsp+50h]  
+00007FF7D0B82B52 48 8B 7C 24 58       mov         rdi,qword ptr [rsp+58h]  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8))) : 0;
+   108: }
+00007FF7D0B82B57 48 83 C4 40          add         rsp,40h  
+00007FF7D0B82B5B 5B                   pop         rbx  
+00007FF7D0B82B5C C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8))
+00007FF7D0B82B5D 33 C0                xor         eax,eax  
+00007FF7D0B82B5F 48 83 C4 40          add         rsp,40h  
+00007FF7D0B82B63 5B                   pop         rbx  
+00007FF7D0B82B64 C3                   ret  
+
+9 arg
+
+   104: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   105: {
+00007FF7B8312AE0 40 53                push        rbx  
+00007FF7B8312AE2 48 83 EC 50          sub         rsp,50h  
+00007FF7B8312AE6 48 8B D9             mov         rbx,rcx  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9))
+00007FF7B8312AE9 48 85 C9             test        rcx,rcx  
+00007FF7B8312AEC 74 74                je          Delegator+82h (07FF7B8312B62h)  
+00007FF7B8312AEE 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF7B8312AF2 4C 8B 51 50          mov         r10,qword ptr [rcx+50h]  
+00007FF7B8312AF6 4C 8B 59 48          mov         r11,qword ptr [rcx+48h]  
+00007FF7B8312AFA 48 8B 51 18          mov         rdx,qword ptr [rcx+18h]  
+00007FF7B8312AFE 48 8B 41 08          mov         rax,qword ptr [rcx+8]  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9))
+00007FF7B8312B02 4C 8B 49 28          mov         r9,qword ptr [rcx+28h]  
+00007FF7B8312B06 4C 8B 41 20          mov         r8,qword ptr [rcx+20h]  
+00007FF7B8312B0A 4C 89 54 24 40       mov         qword ptr [rsp+40h],r10  
+00007FF7B8312B0F 48 89 6C 24 60       mov         qword ptr [rsp+60h],rbp  
+00007FF7B8312B14 48 8B 69 30          mov         rbp,qword ptr [rcx+30h]  
+00007FF7B8312B18 4C 89 5C 24 38       mov         qword ptr [rsp+38h],r11  
+00007FF7B8312B1D 48 89 74 24 68       mov         qword ptr [rsp+68h],rsi  
+00007FF7B8312B22 48 8B 71 38          mov         rsi,qword ptr [rcx+38h]  
+00007FF7B8312B26 48 89 7C 24 70       mov         qword ptr [rsp+70h],rdi  
+00007FF7B8312B2B 48 8B 79 40          mov         rdi,qword ptr [rcx+40h]  
+00007FF7B8312B2F 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF7B8312B33 48 89 7C 24 30       mov         qword ptr [rsp+30h],rdi  
+00007FF7B8312B38 48 89 74 24 28       mov         qword ptr [rsp+28h],rsi  
+00007FF7B8312B3D 48 89 6C 24 20       mov         qword ptr [rsp+20h],rbp  
+00007FF7B8312B42 74 1A                je          Delegator+7Eh (07FF7B8312B5Eh)  
+00007FF7B8312B44 FF D0                call        rax  
+00007FF7B8312B46 48 89 03             mov         qword ptr [rbx],rax  
+00007FF7B8312B49 48 8B 74 24 68       mov         rsi,qword ptr [rsp+68h]  
+00007FF7B8312B4E 48 8B 6C 24 60       mov         rbp,qword ptr [rsp+60h]  
+00007FF7B8312B53 48 8B 7C 24 70       mov         rdi,qword ptr [rsp+70h]  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9))) : 0;
+   108: }
+00007FF7B8312B58 48 83 C4 50          add         rsp,50h  
+00007FF7B8312B5C 5B                   pop         rbx  
+00007FF7B8312B5D C3                   ret  
+   106:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9))
+00007FF7B8312B5E FF D0                call        rax  
+00007FF7B8312B60 EB E7                jmp         Delegator+69h (07FF7B8312B49h)  
+00007FF7B8312B62 33 C0                xor         eax,eax  
+   107:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9))) : 0;
+   108: }
+00007FF7B8312B64 48 83 C4 50          add         rsp,50h  
+00007FF7B8312B68 5B                   pop         rbx  
+00007FF7B8312B69 C3                   ret  
+
+10 arg
+
+   105: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+   106: {
+00007FF6C0AB2AE0 40 53                push        rbx  
+00007FF6C0AB2AE2 48 83 EC 50          sub         rsp,50h  
+00007FF6C0AB2AE6 48 8B D9             mov         rbx,rcx  
+   107:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))
+00007FF6C0AB2AE9 48 85 C9             test        rcx,rcx  
+00007FF6C0AB2AEC 0F 84 89 00 00 00    je          Delegator+9Bh (07FF6C0AB2B7Bh)  
+00007FF6C0AB2AF2 48 83 3B 00          cmp         qword ptr [rbx],0  
+00007FF6C0AB2AF6 48 8B 41 58          mov         rax,qword ptr [rcx+58h]  
+00007FF6C0AB2AFA 4C 8B 51 50          mov         r10,qword ptr [rcx+50h]  
+00007FF6C0AB2AFE 4C 8B 59 48          mov         r11,qword ptr [rcx+48h]  
+00007FF6C0AB2B02 48 8B 51 18          mov         rdx,qword ptr [rcx+18h]  
+   107:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))
+00007FF6C0AB2B06 4C 8B 49 28          mov         r9,qword ptr [rcx+28h]  
+00007FF6C0AB2B0A 4C 8B 41 20          mov         r8,qword ptr [rcx+20h]  
+00007FF6C0AB2B0E 48 89 44 24 48       mov         qword ptr [rsp+48h],rax  
+00007FF6C0AB2B13 48 89 6C 24 60       mov         qword ptr [rsp+60h],rbp  
+00007FF6C0AB2B18 48 8B 69 30          mov         rbp,qword ptr [rcx+30h]  
+00007FF6C0AB2B1C 4C 89 54 24 40       mov         qword ptr [rsp+40h],r10  
+00007FF6C0AB2B21 48 89 74 24 68       mov         qword ptr [rsp+68h],rsi  
+00007FF6C0AB2B26 48 8B 71 38          mov         rsi,qword ptr [rcx+38h]  
+00007FF6C0AB2B2A 4C 89 5C 24 38       mov         qword ptr [rsp+38h],r11  
+00007FF6C0AB2B2F 48 89 7C 24 70       mov         qword ptr [rsp+70h],rdi  
+00007FF6C0AB2B34 48 8B 79 40          mov         rdi,qword ptr [rcx+40h]  
+00007FF6C0AB2B38 48 8B 49 10          mov         rcx,qword ptr [rcx+10h]  
+00007FF6C0AB2B3C 48 89 7C 24 30       mov         qword ptr [rsp+30h],rdi  
+00007FF6C0AB2B41 48 89 74 24 28       mov         qword ptr [rsp+28h],rsi  
+00007FF6C0AB2B46 4C 89 74 24 78       mov         qword ptr [rsp+78h],r14  
+00007FF6C0AB2B4B 4C 8B 73 08          mov         r14,qword ptr [rbx+8]  
+00007FF6C0AB2B4F 48 89 6C 24 20       mov         qword ptr [rsp+20h],rbp  
+00007FF6C0AB2B54 74 20                je          Delegator+96h (07FF6C0AB2B76h)  
+00007FF6C0AB2B56 41 FF D6             call        r14  
+00007FF6C0AB2B59 48 89 03             mov         qword ptr [rbx],rax  
+00007FF6C0AB2B5C 48 8B 7C 24 70       mov         rdi,qword ptr [rsp+70h]  
+00007FF6C0AB2B61 48 8B 74 24 68       mov         rsi,qword ptr [rsp+68h]  
+00007FF6C0AB2B66 48 8B 6C 24 60       mov         rbp,qword ptr [rsp+60h]  
+00007FF6C0AB2B6B 4C 8B 74 24 78       mov         r14,qword ptr [rsp+78h]  
+   108:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))) : 0;
+   109: }
+00007FF6C0AB2B70 48 83 C4 50          add         rsp,50h  
+00007FF6C0AB2B74 5B                   pop         rbx  
+00007FF6C0AB2B75 C3                   ret  
+   107:     return param ? (param->ret ? (param->ret = param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))
+00007FF6C0AB2B76 41 FF D6             call        r14  
+00007FF6C0AB2B79 EB E1                jmp         Delegator+7Ch (07FF6C0AB2B5Ch)  
+00007FF6C0AB2B7B 33 C0                xor         eax,eax  
+   108:         : (param->func(param->arg1, param->arg2, param->arg3, param->arg4, param->arg5, param->arg6, param->arg7, param->arg8, param->arg9, param->arg10))) : 0;
+   109: }
+00007FF6C0AB2B7D 48 83 C4 50          add         rsp,50h  
+00007FF6C0AB2B81 5B                   pop         rbx  
+00007FF6C0AB2B82 C3                   ret  

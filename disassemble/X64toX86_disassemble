@@ -1,0 +1,40 @@
+
+X86_Start & X86_End is copied from http://blog.rewolf.pl/blog/?p=102
+
+    35: __declspec(noinline) DWORD WINAPI Delegator(Param1* param)
+    36: {
+00007FF6B4252F10 48 89 4C 24 08       mov         qword ptr [rsp+8],rcx  
+00007FF6B4252F15 48 83 EC 28          sub         rsp,28h  
+    37:     return param->func(param->arg1);
+00007FF6B4252F19 48 8B 44 24 30       mov         rax,qword ptr [param]  
+00007FF6B4252F1E 8B 48 08             mov         ecx,dword ptr [rax+8]  
+00007FF6B4252F21 48 8B 44 24 30       mov         rax,qword ptr [param]   
+
+; 00007FF6B4252F26 FF 10                call        qword ptr [rax] 
+
+; X86_Start
+6A 33                push        33h  
+E8 00 00 00 00       call        $+5 
+83 04 24 05          add         dword ptr [esp],5  
+CB                   retf  
+
+002F2A26 FF D0                call        eax  
+
+; X86_End
+E8 00 00 00 00       call        $+5 
+C7 44 24 04 23 00 00 00 mov      dword ptr [esp+4],23h  
+83 04 24 0D          add         dword ptr [esp],0Dh  
+CB                   retf  
+
+    38: }
+00007FF6B4252F28 48 83 C4 28          add         rsp,28h  
+00007FF6B4252F2C C3                   ret  
+
+
+shell_code:
+
+0x48, 0x89, 0x4c, 0x24, 0x08, 0x48, 0x83, 0xec, 0x28, 0x48, 0x8b, 0x44, 0x24, 0x30, 0x8b, 0x48, 0x08, 0x48, 0x8b, 0x44, 0x24, 0x30, 
+0x6a, 0x33, 0xe8, 0x00, 0x00, 0x00, 0x00, 0x83, 0x04, 0x24, 0x05, 0xcb, 
+0xff, 0xd0, 
+0xe8, 0x00, 0x00, 0x00, 0x00, 0xc7, 0x44, 0x24, 0x04, 0x23, 0x00, 0x00, 0x00, 0x83, 0x04, 0x24, 0x0d, 0xcb, 
+0x48, 0x83, 0xc4, 0x28, 0xc3

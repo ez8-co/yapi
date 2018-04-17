@@ -1,0 +1,136 @@
+55                   push        ebp  
+8B EC                mov         ebp,esp  
+8B 4D 10             mov         ecx,dword ptr [argC]  
+8D 55 14             lea         edx,[ebp+14h]  
+83 EC 40             sub         esp,40h  
+53                   push        ebx  
+56                   push        esi  
+57                   push        edi  
+85 C9                test        ecx,ecx  
+7E 15                jle         X64Call+28h ()  
+8B 45 14             mov         eax,dword ptr [ebp+14h]  
+8D 55 1C             lea         edx,[ebp+1Ch]  
+49                   dec         ecx  
+89 45 F0             mov         dword ptr [_rcx],eax  
+8B 45 18             mov         eax,dword ptr [ebp+18h]  
+89 4D 10             mov         dword ptr [argC],ecx  
+89 45 F4             mov         dword ptr [ebp-0Ch],eax  
+EB 08                jmp         X64Call+30h ()  
+0F 57 C0             xorps       xmm0,xmm0  
+66 0F 13 45 F0       movlpd      qword ptr [_rcx],xmm0  
+85 C9                test        ecx,ecx  
+7E 15                jle         X64Call+49h ()  
+49                   dec         ecx  
+83 C2 08             add         edx,8  
+89 4D 10             mov         dword ptr [argC],ecx  
+8B 42 F8             mov         eax,dword ptr [edx-8]  
+89 45 E8             mov         dword ptr [_rdx],eax  
+8B 42 FC             mov         eax,dword ptr [edx-4]  
+89 45 EC             mov         dword ptr [ebp-14h],eax  
+EB 08                jmp         X64Call+51h ()  
+0F 57 C0             xorps       xmm0,xmm0  
+66 0F 13 45 E8       movlpd      qword ptr [_rdx],xmm0  
+85 C9                test        ecx,ecx  
+7E 15                jle         X64Call+6Ah ()  
+49                   dec         ecx  
+83 C2 08             add         edx,8  
+89 4D 10             mov         dword ptr [argC],ecx  
+8B 42 F8             mov         eax,dword ptr [edx-8]  
+89 45 E0             mov         dword ptr [_r8],eax  
+8B 42 FC             mov         eax,dword ptr [edx-4]  
+89 45 E4             mov         dword ptr [ebp-1Ch],eax  
+EB 08                jmp         X64Call+72h ()  
+0F 57 C0             xorps       xmm0,xmm0  
+66 0F 13 45 E0       movlpd      qword ptr [_r8],xmm0  
+85 C9                test        ecx,ecx  
+7E 15                jle         X64Call+8Bh ()  
+49                   dec         ecx  
+83 C2 08             add         edx,8  
+89 4D 10             mov         dword ptr [argC],ecx  
+8B 42 F8             mov         eax,dword ptr [edx-8]  
+89 45 D8             mov         dword ptr [_r9],eax  
+8B 42 FC             mov         eax,dword ptr [edx-4]  
+89 45 DC             mov         dword ptr [ebp-24h],eax  
+EB 08                jmp         X64Call+93h ()  
+0F 57 C0             xorps       xmm0,xmm0  
+66 0F 13 45 D8       movlpd      qword ptr [_r9],xmm0  
+8B C2                mov         eax,edx  
+C7 45 FC 00 00 00 00 mov         dword ptr [back_esp],0  
+99                   cdq  
+0F 57 C0             xorps       xmm0,xmm0  
+89 45 C0             mov         dword ptr [restArgs],eax  
+8B C1                mov         eax,ecx  
+89 55 C4             mov         dword ptr [ebp-3Ch],edx  
+99                   cdq  
+66 0F 13 45 C8       movlpd      qword ptr [_rax],xmm0  
+89 45 D0             mov         dword ptr [_argC],eax  
+89 55 D4             mov         dword ptr [ebp-2Ch],edx  
+C7 45 F8 00 00 00 00 mov         dword ptr [back_fs],0  
+66 8C 65 F8          mov         word ptr [back_fs],fs  
+B8 2B 00 00 00       mov         eax,2Bh  
+66 8E E0             mov         fs,ax  
+89 65 FC             mov         dword ptr [back_esp],esp  
+83 E4 F0             and         esp,0FFFFFFF0h  
+6A 33                push        33h  
+E8 00 00 00 00       call        X64Call+0D4h ()  
+83 04 24 05          add         dword ptr [esp],5  
+CB                   retf  
+48                   dec         eax  
+8B 4D F0             mov         ecx,dword ptr [_rcx]  
+48                   dec         eax  
+8B 55 E8             mov         edx,dword ptr [_rdx]  
+FF 75 E0             push        dword ptr [_r8]  
+49                   dec         ecx  
+58                   pop         eax  
+FF 75 D8             push        dword ptr [_r9]  
+49                   dec         ecx  
+59                   pop         ecx  
+48                   dec         eax  
+8B 45 D0             mov         eax,dword ptr [_argC]  
+A8 01                test        al,1  
+75 03                jne         X64Call+0F6h ()  
+83 EC 08             sub         esp,8  
+57                   push        edi  
+48                   dec         eax  
+8B 7D C0             mov         edi,dword ptr [restArgs]  
+48                   dec         eax  
+85 C0                test        eax,eax  
+74 16                je          _ls+11h ()  
+48                   dec         eax  
+8D 7C C7 F8          lea         edi,[edi+eax*8-8]  
+48                   dec         eax  
+85 C0                test        eax,eax  
+74 0C                je          _ls+11h ()  
+FF 37                push        dword ptr [edi]  
+48                   dec         eax  
+83 EF 08             sub         edi,8  
+48                   dec         eax  
+83 E8 01             sub         eax,1  
+EB EF                jmp         _ls ()
+48                   dec         eax  
+83 EC 20             sub         esp,20h  
+FF 55 08             call        dword ptr [func]  
+48                   dec         eax  
+8B 4D D0             mov         ecx,dword ptr [_argC]  
+48                   dec         eax  
+8D 64 CC 20          lea         esp,[esp+ecx*8+20h]  
+5F                   pop         edi  
+48                   dec         eax  
+89 45 C8             mov         dword ptr [_rax],eax  
+E8 00 00 00 00       call        _ls+2Bh ()  
+C7 44 24 04 23 00 00 00 mov         dword ptr [esp+4],23h  
+83 04 24 0D          add         dword ptr [esp],0Dh  
+CB                   retf  
+66 8C D8             mov         ax,ds  
+66 8E D0             mov         ss,ax  
+8B 65 FC             mov         esp,dword ptr [back_esp]  
+66 8B 45 F8          mov         ax,word ptr [back_fs]  
+66 8E E0             mov         fs,ax  
+8B 45 C8             mov         eax,dword ptr [_rax]  
+8B 55 CC             mov         edx,dword ptr [ebp-34h]  
+5F                   pop         edi  
+5E                   pop         esi  
+5B                   pop         ebx  
+8B E5                mov         esp,ebp  
+5D                   pop         ebp  
+C3                   ret  
