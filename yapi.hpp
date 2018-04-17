@@ -394,37 +394,6 @@ namespace yapi {
 		return 0;
 	}
 
-	HANDLE WINAPI CreateRemoteThread32(HANDLE hProcess,
-										LPSECURITY_ATTRIBUTES lpThreadAttributes,
-										SIZE_T dwStackSize,
-										DWORD64 lpStartAddress,
-										DWORD64 lpParameter,
-										DWORD dwCreationFlags,
-										LPDWORD lpThreadId)
-	{
-		typedef DWORD(WINAPI * RTL_CREATE_USER_THREAD)(HANDLE      ProcessHandle,
-														PSECURITY_DESCRIPTOR  SecurityDescriptor,
-														BOOL      CreateSuspended,
-														ULONG     StackZeroBits,
-														PULONG     StackReserved,
-														PULONG     StackCommit,
-														LPVOID     StartAddress,
-														LPVOID     StartParameter,
-														HANDLE      ThreadHandle,
-														LPVOID     ClientID);
-		RTL_CREATE_USER_THREAD RtlCreateUserThread = (RTL_CREATE_USER_THREAD)GetProcAddress(detail::hNtDll, "RtlCreateUserThread");
-		if (!RtlCreateUserThread) return 0;
-
-		BOOLEAN createSuspended = dwCreationFlags & CREATE_SUSPENDED;
-		ULONG stackSize = dwStackSize;
-		DWORD64 handle = 0;
-		DWORD64 status = RtlCreateUserThread(hProcess, lpThreadAttributes, createSuspended, 0, (dwCreationFlags & STACK_SIZE_PARAM_IS_A_RESERVATION) ? &stackSize : NULL, &stackSize, (LPTHREAD_START_ROUTINE)lpStartAddress, (PVOID)lpParameter, &handle, NULL);
-		if (!status) return (HANDLE)handle;
-
-		SetLastError((DWORD)status);
-		return NULL;
-	}
-
 	DWORD64 GetNtDll64()
     {
 		static DWORD64 hNtdll64 = 0;
@@ -451,6 +420,7 @@ namespace yapi {
 			#define _(x) __asm __emit (x)
 			__declspec(naked) DWORD64 x64Call(DWORD64 func, int argC, ...)
 			{
+				// see X64Call_disassemble for details
 				_(0x55)_(0x8b)_(0xec)_(0x8b)_(0x4d)_(0x10)_(0x8d)_(0x55)_(0x14)_(0x83)_(0xec)_(0x40)_(0x53)_(0x56)_(0x57)_(0x85)
 				_(0xc9)_(0x7e)_(0x15)_(0x8b)_(0x45)_(0x14)_(0x8d)_(0x55)_(0x1c)_(0x49)_(0x89)_(0x45)_(0xf0)_(0x8b)_(0x45)_(0x18)
 				_(0x89)_(0x4d)_(0x10)_(0x89)_(0x45)_(0xf4)_(0xeb)_(0x08)_(0x0f)_(0x57)_(0xc0)_(0x66)_(0x0f)_(0x13)_(0x45)_(0xf0)
@@ -712,6 +682,7 @@ namespace yapi {
 		std::string makeShellCode(int cnt, bool is64Bit)
 		{
 			if(is64Bit) {
+				// see X64Delegator_disassemble for details
 				static const unsigned char kTmpl_x64[] = { 0x40, 0x53, 0x48, 0x83, 0xec, 0x20, 0x48, 0x8b, 0xd9, 0x48, 0x85, 0xc9, 0x74, 0x1d, 0x48, 0x83, 
 														   0x39, 0x00, 0x48, 0x8b, 0x41, 0x08, 0x74, 0x0b, 0xff, 0xd0, 0x48, 0x89, 0x03, 0x48, 0x83, 0xc4, 
 														   0x20, 0x5b, 0xc3, 0x48, 0x83, 0xc4, 0x20, 0x5b, 0x48, 0xff, 0xe0, 0x33, 0xc0, 0x48, 0x83, 0xc4, 
@@ -755,6 +726,7 @@ namespace yapi {
 				}
 				return templ_x64;
 			}
+			// see X86Delegator_disassemble for details
 			static const unsigned char kTmpl_x86[] = { 0x55, 0x8b, 0xec, 0x51, 0x83, 0x7d, 0x08, 0x00, 0x74, 0x0c, 0x8b ,0x45, 0x08, 0x8b, 0x08, 0xff, 
 													   0xd0, 0x89, 0x45, 0xfc, 0xeb, 0x07, 0xc7, 0x45, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x8b, 0x45, 0xfc,
 													   0x8b, 0xe5, 0x5d, 0xc3 };
@@ -847,6 +819,7 @@ namespace yapi {
 				hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);
 			else {
 #ifdef _WIN64
+				// see X64toX86_disassemble for details
 				static const unsigned char kTmpl_x64_to_x86[] = { 0x48, 0x89, 0x4c, 0x24, 0x08, 0x48, 0x83, 0xec, 0x28, 0x48, 0x8b, 0x44, 0x24, 0x30, 0x8b, 0x48, 
 																  0x08, 0x48, 0x8b, 0x44, 0x24, 0x30, 0x6a, 0x33, 0xe8, 0x00, 0x00, 0x00, 0x00, 0x83, 0x04, 0x24, 
 																  0x05, 0xcb, 0xff, 0xd0, 0xe8, 0x00, 0x00, 0x00, 0x00, 0xc7, 0x44, 0x24, 0x04, 0x23, 0x00, 0x00, 
@@ -856,7 +829,7 @@ namespace yapi {
 				sc->SetDontRelese();
 				hThread = CreateRemoteThread64(_hProcess, NULL, 0, *_sc, p, 0, NULL);
 #else
-				hThread = CreateRemoteThread32(_hProcess, NULL, 0, *_sc, p, 0, NULL);
+				hThread = CreateRemoteThread(_hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)(DWORD64)*_sc, (PVOID)(DWORD64)p, 0, NULL);
 #endif
 			}
 			if (!hThread) return -1;

@@ -100,8 +100,7 @@ int main()
 			YAPICall MessageBoxA(hProcess, _T("user32.dll"), "MessageBoxA");
 			MessageBoxA(NULL, "MessageBoxA : Hello World!", "From ez8.co", MB_OK);
 
-			YAPI(hProcess, _T("user32.dll"), MessageBoxW)
-				(NULL, L"MessageBoxW: Hello World!", L"From ez8.co", MB_OK);
+			YAPI(hProcess, _T("user32.dll"), MessageBoxW)(NULL, L"MessageBoxW: Hello World!", L"From ez8.co", MB_OK);
 
 			YAPICall GetCurrentProcessId(hProcess, _T("kernel32.dll"), "GetCurrentProcessId");
 			DWORD pid = GetCurrentProcessId();
