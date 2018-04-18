@@ -46,9 +46,9 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
       - Specified module is allowed (`ntdll.dll` as default)
     
         ```cpp
-            X64Call(const char* funcName);
+        X64Call(const char* funcName);
             
-            X64Call(DWORD64 module, const char* funcName);
+        X64Call(DWORD64 module, const char* funcName);
         ```
 
 - `YAPICall` example (`MessageBox` in remote process)
@@ -76,11 +76,11 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
       - **NOTICE: If failed to fetch 64-bit module, will automatically fetch 32-bit modules in wow64 process under 64-bit OS**.
 
         ```cpp
-            YAPICall(HANDLE hProcess, const char* funcName);
+        YAPICall(HANDLE hProcess, const char* funcName);
 
-            YAPICall(HANDLE hProcess, DWORD64 moudle, const char* funcName);
+        YAPICall(HANDLE hProcess, DWORD64 moudle, const char* funcName);
 
-            YAPICall(HANDLE hProcess, const TCHAR* modName, const char* funcName);
+        YAPICall(HANDLE hProcess, const TCHAR* modName, const char* funcName);
         ```
 
 - 64-bit result example (`GetModuleHandle` of `user32.dll` under 64-bit OS)
@@ -101,6 +101,15 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
 
     ```cpp
         DWORD64 user32Dll = GetModuleHandle.Dw64().Timeout(300)(_T("user32.dll"));
+    ```
+
+- **Popular `LoadLibrary` example**
+
+    ```cpp
+        YAPICall LoadLibraryA(hProcess, _T("kernel32.dll"), "LoadLibraryA");
+        DWORD64 x86Dll = LoadLibraryA("D:\\x86.dll");
+        DWORD64 x64Dll = LoadLibraryA.Dw64()("D:\\x64.dll");
+        _tprintf(_T("X86: %I64x\nX64: %I64x\n"), x86Dll, x64Dll);
     ```
 
 - API List:
@@ -174,9 +183,9 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
 - 64-bit OS compatible support of `X64Call`.
 - Finish shell codes that more than 6 arguments for `YAPICall`.
 - Support to fetch specified bit module for `YAPICall` (32-bit or 64-bit).
+- Same function call automatically.
 
 # Misc
 
 - Please feel free to use yapi.
 - Looking forward to your suggestions.
-
