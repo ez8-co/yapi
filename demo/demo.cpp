@@ -62,6 +62,11 @@ int main()
 			DWORD pid = GetCurrentProcessId();
 			_tprintf(_T("[%d]%s => %d\n"), pe32.th32ProcessID, pe32.szExeFile, pid);
 
+			YAPICall LoadLibraryA(hProcess, _T("kernel32.dll"), "LoadLibraryA");
+			DWORD64 x86Dll = LoadLibraryA("D:\\x86.dll");
+			DWORD64 x64Dll = LoadLibraryA.Dw64()("D:\\x64.dll");
+			_tprintf(_T("X86: %I64x\nX64: %I64x\n"), x86Dll, x64Dll);
+
 #else
 
 			extern void MyMessageBox(HANDLE hProcess);
