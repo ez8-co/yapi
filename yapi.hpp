@@ -294,14 +294,15 @@ namespace yapi {
 			if (!NT_SUCCESS(status)) continue;
 
 			if (func == funcName) {
-				std::vector<DWORD> rvaTable(ied.NumberOfFunctions);
-				status = ReadProcessMemory(hProcess, (PVOID)(hModule + ied.AddressOfFunctions), (PVOID)&rvaTable[0], sizeof(DWORD) * ied.NumberOfFunctions, NULL);
-
-				std::vector<WORD> ordTable(ied.NumberOfFunctions);
-				status = ReadProcessMemory(hProcess, (PVOID)(hModule + ied.AddressOfNameOrdinals), (PVOID)&ordTable[0], sizeof(WORD) * ied.NumberOfFunctions, NULL);
+				WORD ord = 0;
+				status = ReadProcessMemory(hProcess, (PVOID)(hModule + ied.AddressOfNameOrdinals + i * sizeof(WORD)), (PVOID)&ord, sizeof(WORD), NULL);
 				if (!NT_SUCCESS(status)) continue;
 
-				return hModule + rvaTable[ordTable[i]];
+				DWORD rva = 0;
+				status = ReadProcessMemory(hProcess, (PVOID)(hModule + ied.AddressOfFunctions + ord * sizeof(DWORD)), (PVOID)&rva, sizeof(DWORD), NULL);
+				if (!NT_SUCCESS(status)) continue;
+
+				return hModule + rva;
 			}
 		}
 		return 0;
@@ -381,14 +382,15 @@ namespace yapi {
 			if (!NT_SUCCESS(status)) continue;
 
 			if (func == funcName) {
-				std::vector<DWORD> rvaTable(ied.NumberOfFunctions);
-				status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)(hModule + ied.AddressOfFunctions), (PVOID)&rvaTable[0], sizeof(DWORD) * ied.NumberOfFunctions, NULL);
-
-				std::vector<WORD> ordTable(ied.NumberOfFunctions);
-				status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)(hModule + ied.AddressOfNameOrdinals), (PVOID)&ordTable[0], sizeof(WORD) * ied.NumberOfFunctions, NULL);
+				WORD ord = 0;
+				status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)(hModule + ied.AddressOfNameOrdinals + i * sizeof(WORD)), (PVOID)&ord, sizeof(WORD), NULL);
 				if (!NT_SUCCESS(status)) continue;
 
-				return hModule + rvaTable[ordTable[i]];
+				DWORD rva = 0;
+				status = NtWow64ReadVirtualMemory64(hProcess, (PVOID64)(hModule + ied.AddressOfFunctions + ord * sizeof(DWORD)), (PVOID)&rva, sizeof(DWORD), NULL);
+				if (!NT_SUCCESS(status)) continue;
+
+				return hModule + rva;
 			}
 		}
 		return 0;
