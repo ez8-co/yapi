@@ -1,5 +1,5 @@
 # YAPI -- Yet Another Process Injector
-A fusion library that reduce differences between x64, wow64 and x86 processes according to [Mr.Rewolf's article](http://blog.rewolf.pl/blog/?p=102).
+A fusion injector that reduce differences between x64, wow64 and x86 processes according to [Mr.Rewolf's article](http://blog.rewolf.pl/blog/?p=102).
 
 **Keywords: HEADER-ONLY, DLL-FREE, ANY-CALLEE, ANY-CALLER, ANY-WIN-OS, LOCAL-LIKE**
 
@@ -61,12 +61,6 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
 
         YAPI(hProcess, _T("user32.dll"), MessageBoxW)
             (NULL, L"MessageBoxW: Hello World!", L"From ez8.co", MB_OK);
-
-        YAPICall GetCurrentProcessId(hProcess, _T("kernel32.dll"), "GetCurrentProcessId");
-
-        // => local-like call
-        DWORD pid = GetCurrentProcessId();
-        _tprintf(_T("Result: %d\n"), pid);
     ```
 
     - Available constructors:
@@ -183,7 +177,8 @@ A fusion library that reduce differences between x64, wow64 and x86 processes ac
 - 64-bit OS compatible support of `X64Call`.
 - Finish shell codes that more than 6 arguments for `YAPICall`.
 - Support to fetch specified bit module for `YAPICall` (32-bit or 64-bit).
-- Same function call automatically.
+- Same function call (clone call) automatically in remote process.
+- Support other 7 optional inject methods.
 
 # Misc
 
