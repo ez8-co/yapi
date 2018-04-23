@@ -164,7 +164,8 @@ A fusion injector that reduce differences between x64, wow64 and x86 processes a
     |-----------------------|----------|
     | Windows 10            | Tested on 64-bit, should also work on 32-bit |
     | Windows 8             | Should work on both 64-bit and 32-bit |
-    | Windows 7             | Should work on both 64-bit and 32-bit |
+    | Windows 7             | Tested on 64-bit, should also work on 32-bit |
+    | Windows Vista         | Should work on both 64-bit and 32-bit |
     | Windows XP            | Should work on both 64-bit and 32-bit |
 
 # References
