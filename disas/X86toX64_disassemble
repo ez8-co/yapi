@@ -1,0 +1,53 @@
+
+X64_Start & X64_End is copied from http://blog.rewolf.pl/blog/?p=102
+
+    31: __declspec(noinline) DWORD64 WINAPI Delegator(Param1* param)
+    32: {
+002F2A10 55                   push        ebp  
+002F2A11 8B EC                mov         ebp,esp  
+002F2A13 51                   push        ecx  
+    43:     return param ? param->func(param->arg1) : 0;
+002F2A14 83 7D 08 00          cmp         dword ptr [param],0 
+
+; 002F2A18 74 13                je          Delegator+1Dh (02F2A2Dh)   
+
+ 74 31                je          Delegator+1Dh+1Eh  
+002F2A1A 8B 45 08             mov         eax,dword ptr [param]  
+002F2A1D 8B 48 08             mov         ecx,dword ptr [eax+8]  
+002F2A20 51                   push        ecx  
+002F2A21 8B 55 08             mov         edx,dword ptr [param]  
+002F2A24 8B 02                mov         eax,dword ptr [edx]  
+
+; 002F2A26 FF D0                call        eax  
+
+; X64_Start
+6A 33                push        33h  
+E8 00 00 00 00       call        $+5 
+83 04 24 05          add         dword ptr [esp],5  
+CB                   retf  
+
+FF D0                callq        rax  
+
+; X64_End
+E8 00 00 00 00       call        $+5 
+C7 44 24 04 23 00 00 00 mov      dword ptr [esp+4],23h  
+83 04 24 0D          add         dword ptr [esp],0Dh  
+CB                   retf  
+
+002F2A28 89 45 FC             mov         dword ptr [ebp-4],eax  
+002F2A2B EB 07                jmp         Delegator+24h (02F2A34h)  
+002F2A2D C7 45 FC 00 00 00 00 mov         dword ptr [ebp-4],0  
+002F2A34 8B 45 FC             mov         eax,dword ptr [ebp-4]  
+    44: }
+002F2A37 8B E5                mov         esp,ebp  
+002F2A39 5D                   pop         ebp  
+002F2A3A C3                   ret  
+
+
+shell_code:
+
+0x55, 0x8b, 0xec, 0x51, 0x83, 0x7d, 0x08, 0x00, 0x74, 0x31, 0x8b, 0x45, 0x08, 0x8b, 0x48, 0x08, 0x51, 0x8b, 0x55, 0x08, 0x8b, 0x02, 
+0x6a, 0x33, 0xe8, 0x00, 0x00, 0x00, 0x00, 0x83, 0x04, 0x24, 0x05, 0xcb, 
+0xff, 0xd0, 
+0xe8, 0x00, 0x00, 0x00, 0x00, 0xc7, 0x44, 0x24, 0x04, 0x23, 0x00, 0x00, 0x00, 0x83, 0x04, 0x24, 0x0d, 0xcb, 
+0x89, 0x45, 0xfc, 0xeb, 0x07, 0xc7, 0x45, 0xfc, 0x00, 0x00, 0x00, 0x00, 0x8b, 0x45, 0xfc, 0x8b, 0xe5, 0x5d, 0xc3
