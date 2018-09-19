@@ -896,8 +896,8 @@ namespace yapi {
 
 	#define CALLERSX(n) \
 		DWORD64 operator()(DECL_PARAMS_LIST(n)) {\
-			static bool b = initShellCoder<n>(_sc);\
-			if(!func || !_sc || !*_sc) return -1;\
+			bool b = initShellCoder<n>(_sc);\
+			if(!b || !func || !_sc || !*_sc) return -1;\
 			detail::GCHelper helper;\
 			if(_is64Bit) {\
 				std::vector<DWORD64> param(n + 2, 0);\
