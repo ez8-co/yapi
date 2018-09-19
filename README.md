@@ -127,7 +127,7 @@ A fusion injector that reduce differences between x64, wow64 and x86 processes a
 
     |  Class Name       |   32-bit OS Support   | 64-bit OS Compatiblity         |
     |---------------|------------------------|---------------|
-    | X64Call           | :white_check_mark: | NOT READY |
+    | X64Call           | :white_check_mark: | NOT READY NOW |
     | ProcessWriter    | :white_check_mark: | :white_check_mark: |
     | YAPICall     | :white_check_mark: | :white_check_mark: |
 
@@ -140,7 +140,7 @@ A fusion injector that reduce differences between x64, wow64 and x86 processes a
 
 - Multi-params windows API:
   - Pack function address and params in one structure and use shell code to execute in remote process.
-  - See `X86/X64Delegator_disassemble` for details in [disassemble directory](https://github.com/ez8-co/yapi/tree/master/disassemble).
+  - See `X86/X64Delegator_disassemble` for details in [disassemble directory](https://github.com/ez8-co/yapi/tree/master/disas).
 
 - x64 call for wow64 process:
   - Switch to x64 mode
@@ -178,7 +178,9 @@ A fusion injector that reduce differences between x64, wow64 and x86 processes a
 - 64-bit OS compatible support of `X64Call`.
 - Finish shell codes that more than 6 arguments for `YAPICall`.
 - Support to fetch specified bit module for `YAPICall` (32-bit or 64-bit).
-- Same function call (clone call) automatically in remote process.
+- Same function call (mirror call) automatically in remote process.
+- Self-defined function call in remote process.
+- IAT/inline hook in remote process.
 - Support other 7 optional inject methods.
 
 # Misc
