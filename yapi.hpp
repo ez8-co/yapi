@@ -596,19 +596,6 @@ namespace yapi {
 			return FALSE;
 		}
 
-		DWORD64 WINAPI LoadLibrary64(const TCHAR* filePath)
-		{
-			static X64Call LdrLoadDll("LdrLoadDll");
-			if (!LdrLoadDll) return 0;
-
-			DWORD64 module = 0;
-			DWORD64 status = LdrLoadDll(0, 0, filePath, &module);
-			if (!status) return module;
-
-			SetLastError64(status);
-			return NULL;
-		}
-
 		HANDLE WINAPI CreateRemoteThread64(HANDLE hProcess,
 											LPSECURITY_ATTRIBUTES lpThreadAttributes,
 											SIZE_T dwStackSize,
