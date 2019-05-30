@@ -4,6 +4,7 @@ A fusion injector that reduce differences between x64, wow64 and x86 processes a
 **Keywords: HEADER-ONLY, DLL-FREE, ANY-CALLEE, ANY-CALLER, ANY-WIN-OS, LOCAL-LIKE**
 
 [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/ez8-co/yapi/blob/master/LICENSE)
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/ExpLife0011/awesome-windows-kernel-security-development#inject-technique-ring3)
 
 # Wiki
 
