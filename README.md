@@ -198,7 +198,6 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
         <br />
         <b>][Noname][</b>
         <br />
-        <sub><a href="https://github.com/gotomicro/ego">[ego]</a></sub>
       </a>
     </td>
   </tr>
